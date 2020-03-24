@@ -1,8 +1,7 @@
-# NGS_Automated
+# ConcordanceCheck
 
-Automation using Bash scripts and Cron jobs for Molgenis Compute pipelines from:
- - NGS_DNA
- - NGS_RNA
+Automation using Bash scripts and Cron jobs, inorder to automate the concordance check calculations. 
+
 
 #### Code style
 
@@ -41,57 +40,52 @@ See separate README_v1.md for details on the (deprecated) version
 #### Data flow
 
 ```
-   ⎛¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯⎞
-   ⎜ LFS  ⎜ Dedicated pre processing server to create FastQ files                        ⎜
-   ⎜ scr* ⎜ multiplexed rawer data (BCL format) -> demultiplexed raw data (FastQ format) ⎜
-   ⎝______________________________________________________________________________________⎠
-      v
-      v
-      1: copyRawDataToPrm
-      v
-      v
-   ⎛¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯⎞
-   ⎜ LFS  ⎜ HPC cluster                                                         ⎜ LFS  ⎜>>> 4: notifications
-   ⎜ prm* ⎜ demultiplexed raw data (FastQ format) -> variant calls (VCF format) ⎜ tmp* ⎜>>> 5: cleanup
-   ⎝____________________________________________________________________________________⎠
-      ^ v                                                                           ^ v
-      ^ `>>>>>>>>>>>>>>>>>>>>>>>>> 2: startPipeline >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>^ v
-      ^                                                                               v
-       `<<<<<<<<<<<<<<<<<<<<<<<<<< 3: copyProjectDataToPrm <<<<<<<<<<<<<<<<<<<<<<<<<<<
-```
+
+
+   ⎛¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯⎞
+   ⎜ LFS  ⎜ Looks on prm0*. Starts from the ngs VCF file, looks if there is an array VCF file with the sample DNAno.  ⎜ 
+   ⎜ tmp* ⎜ If there is a match, a small samplesheet is generated on tmp0* with both file names                       ⎜
+   ⎜      ⎜ and the location of the files on prm0*                                                                    ⎜
+   ⎝__________________________________________________________________________________________________________________⎠
+               v          ^       v
+               v          ^       v <<<< 1: ConcordanceMakeSamplesheet.sh
+               v          ^       v                                                      
+               v    ⎛¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯⎞       ⎛¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯⎞
+               v    ⎜ LFS  ⎜ The NGS_DNA pipeline is finished  ⎜>> + >>⎜ LFS  ⎜ The GAP pipeline is finished         ⎜ 
+               v    ⎜ prm* ⎜ the ngs VCF files are ready.      ⎜       ⎜ prm* ⎜ the array VCF files are ready.       ⎜
+               v    ⎝__________________________________________⎠       ⎝_____________________________________________⎠
+               v                                                                           
+   ⎛¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯⎞
+   ⎜ LFS  ⎜ Copies the nsg VCF and the array VCF file to tmp*.                                       ⎜<<<< 2: ConcordanceCheck.sh 
+   ⎜ tmp* ⎜ Calculates concordance between the nsg and the array VCF files.                          ⎜
+   ⎝_________________________________________________________________________________________________⎠
+               v
+               v
+   ⎛¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯⎞
+   ⎜ LFS  ⎜ Concordance check output is copied to prm0*.                                      ⎜ LFS   ⎜
+   ⎜ tmp* ⎜ A file containing the location of the Concordance check output is stored on dat0* ⎜ prm0* ⎜
+   ⎜      ⎜                                                                                   ⎜ dat0* ⎜
+   ⎝_________________________________________________________________________________________________⎠
+     v                                                                                           ^
+     v                                                                                           ^
+      `>>>>>>>>>>>>>>>> 3: CopyConcordanceData.sh >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>^
 
 ```
-flow gattaca01 (scr01) --> chaperone (prm06) --> leucine-zipper (tmp06) --> chaperone (prm06)
 
-#### gattaca01
-##### umcg-gd-ateambot
-module load NGS_Automated/3.0.1-NGS_Demultiplexing-2.3.1 ; demultiplexing.sh -g umcg-gd
-
-
-#### chaperone
-###### umcg-gd-dm
-module load NGS_Automated/3.0.1-bare ; copyRawDataToPrm.sh -g umcg-gd -s gattaca01.gcc.rug.nl
-
-#### leucine-zipper
-###### umcg-gd-ateambot
-module load NGS_Automated/3.0.1-NGS_DNA-3.5.5 ; startPipeline.sh -g umcg-gd
-
-#### leucine-zipper
-###### umcg-gd-ateambot
-module load NGS_Automated/3.0.1-NGS_DNA-3.5.5 ; calculateProjectMd5s.sh -g umcg-gd
-
-#### chaperone
-###### umcg-gd-dm
-module load NGS_Automated/3.0.1-bare ; copyProjectDataToPrm.sh -g umcg-gd
+```
+flow chaperone (prm06) --> leucine-zipper (tmp06) --> chaperone (prm06)
 
 #### leucine-zipper
 ###### umcg-gd-ateambot 
-module load NGS_Automated/3.0.1-NGS_DNA-3.5.5 ; ConcordanceMakeSamplesheet.sh -g umcg-gd -a umcg-gap
-
+module load ConcordanceCheck/${version} ; ConcordanceMakeSamplesheet.sh -g umcg-gd -a umcg-gap
 
 #### leucine-zipper
 ###### umcg-gd-ateambot 
-module load NGS_Automated/3.0.1-NGS_DNA-3.5.5 ; ConcordanceCheck.sh -g umcg-gd
+module load ConcordanceCheck/${version} ; ConcordanceCheck.sh -g umcg-gd
+
+#### chaperone
+##### umcg-gd-dm
+module load ConcordanceCheck/${version} ; CopyConcordanceData.sh -g umcg-gd
 
 ```
 
@@ -100,74 +94,25 @@ module load NGS_Automated/3.0.1-NGS_DNA-3.5.5 ; ConcordanceCheck.sh -g umcg-gd
 
 The path to phase.state files must be:
 ```
-${TMP_ROOT_DIR}/logs/${project}/${run}.${phase}.${state}
+${TMP_ROOT_DIR}/logs/${ConcordanceCheckID}.${phase}.${state}
 ```
 Phase is in most cases the name of the executing script as determined by ```${SCRIPT_NAME}```.
 State is either ```started```, ```failed``` or ```finished```.
 
- * For 'sequence projects':
-    * ${project} = the 'run' as determined by the sequencer.
-    * ${run}     = the 'run' as determined by the sequencer.
-   Hence ${project} = {run} = [SequencingStartDate]_[Sequencer]_[RunNumber]_[Flowcell]
- * For 'analysis projects':
-    * ${project} = the 'project' name as specified in the sample sheet.
-	* ${run}     = the incremental 'analysis run number'. Starts with run01 and incremented in case of re-analysis.
-
 ```
-(NGS_Demultiplexing) automate.sh => ${sourceServer}:${SCR_ROOT_DIR}/logs/${run}_Demultiplexing.
+## PROCESSING ##
 
-## RUNNING ##
-
-touch ${sourceServer}:${SCR_ROOT_DIR}/logs/${run}_Demultiplexing.finished
-	||
-	\/
-CopyRawDataToPrm.sh -g GROUP -s GATTACA => ${cluster}:${PRM_ROOT_DIR}/logs/copyRawDataToPrm.lock
-                                           ${cluster}:${PRM_ROOT_DIR}/logs/${run}/${run}.copyRawDataToPrm.started
-                                           ${cluster}:${PRM_ROOT_DIR}/logs/${run}/${run}.copyRawDataToPrm.failed
-                                           ${cluster}:${PRM_ROOT_DIR}/logs/${run}/${run}.copyRawDataToPrm.failed.mailed
-                                           ${cluster}:${PRM_ROOT_DIR}/logs/${run}/${run}.copyRawDataToPrm.finished
-                                           ${cluster}:${PRM_ROOT_DIR}/logs/${run}/${run}.copyRawDataToPrm.finished.mailed
-
-                                           ${cluster}:${PRM_ROOT_DIR}/logs/${_run}.samplesheetSplittedPerProject"
-
-## COPYING ##
-
-Check which sample sheets feed into startPipeline! ${cluster}:${PRM_ROOT_DIR}/Samplesheets/project_${cluster}/${project}.csv
-	||
-	\/
-startPipeline.sh -g GROUP => ${project}.scriptsGenerated # Refactor to use *.${phase}.${state} syntax
-                             ${cluster}:${TMP_ROOT_DIR}/logs/${project}/${run}.pipeline.started 
-
-## RUNNING ##
-
-${cluster}:${TMP_ROOT_DIR}/logs/${project}/${run}.pipeline.finished
-	||
-	\/
-	
-calculateProjectMd5s.sh -g GROUP => 	${cluster}:${TMP_ROOT_DIR}/logs/${project}/${run}.calculateMd5s.started
-					${cluster}:${TMP_ROOT_DIR}/logs/${project}/${run}.calculateMd5s.failed
-					${cluster}:${TMP_ROOT_DIR}/logs/${project}/${run}.calculateMd5s.finished
-
-	||
-	\/
-copyProjectDataToPrm.sh -g GROUP => ${cluster}:${PRM_ROOT_DIR}/logs/copyProjectDataToPrm.lock
-                                    ${cluster}:${PRM_ROOT_DIR}/logs/${project}/${run}.copyProjectDataToPrm.started
-                                    ${cluster}:${PRM_ROOT_DIR}/logs/${project}/${run}.copyProjectDataToPrm.failed
-                                    ${cluster}:${PRM_ROOT_DIR}/logs/${project}/${run}.copyProjectDataToPrm.finished
-
-## COPYING ##
-
-${cluster}:${TMP_ROOT_DIR}/logs/${project}/${run}.copyProjectDataToPrm.finished
-
-ConcordanceMakeSamplesheet.sh -g GROUP => 
+ConcordanceMakeSamplesheet.sh -g NGSGROUP -a ARRAYGROUP => 
 
 
 ConcordanceCheck.sh -g GROUP => ${cluster}:${TMP_ROOT_DIR}/logs/${project}/${run}.ConcordanceCheck.started
 				${cluster}:${TMP_ROOT_DIR}/logs/${project}/${run}.ConcordanceCheck.finished
 
-```
+CopyConcordanceData.sh -g GROUP => ${cluster}:${PRM_ROOT_DIR}/concordance/logs/${ConcordanceCheckID}.CopyConcordanceCheckData.started
+				${cluster}:${PRM_ROOT_DIR}/concordance/logs/${ConcordanceCheckID}.CopyConcordanceCheckData.finished
 
-#### notifications.sh
+```
+#### notifications.sh (Not (yet) for the concordancecheck, do we want this?)
 
 To configure e-mail notification by the notifications script, 
 edit the ```NOTIFY_FOR_PHASE_WITH_STATE``` array in ```etc/${group}.cfg``` 
@@ -188,11 +133,10 @@ ${TMP_ROOT_DIR}/logs/${phase}.mailinglist
 In case the list of addresses is the same for mutiple states, you can use symlinks per state. E.g.
 ```
 ${TMP_ROOT_DIR}/logs/all.mailinglist
-${TMP_ROOT_DIR}/logs/${phase1}.mailinglist -> ./all.mailinglist
-${TMP_ROOT_DIR}/logs/${phase2}.mailinglist -> ./all.mailinglist
+${TMP_ROOT_DIR}/logs/${phase1}.mailinglist -> ./all.mailinglist${TMP_ROOT_DIR}/logs/${phase2}.mailinglist -> ./all.mailinglist
 ```
 
-#### cleanup.sh
+#### cleanup.sh (Not (yet) for the concordancecheck, do we want this?)
 
 The cleanup script runs once a day, it will clean up old data:
 - Remove all the GavinStandAlone project/generatedscripts/tmp data once the GavinStandAlone has a ${project}.vcf.finished in ${TMP_ROOT_DIR}/GavinStandAlone/input
@@ -204,49 +148,41 @@ The cleanup script runs once a day, it will clean up old data:
 
 #### Who runs what and where
 
-|Script                  |User              |Running on site/server     |
-|------------------------|------------------|---------------------------|
-|1. copyRawDataToPrm     |${group}-dm       |HPC Cluster with prm mount |
-|2. startPipeline        |${group}-ateambot |HPC Cluster with tmp mount |
-|3. copyProjectDataToPrm |${group}-dm       |HPC Cluster with tmp mount |
-|4. notifications        |${group}-ateambot |HPC Cluster with tmp mount |
-|5. cleanup              |${group}-ateambot |HPC Cluster with tmp mount |
+|Script                        |User              |Running on site/server     |
+|------------------------------|------------------|---------------------------|
+|1. ConcordanceMAkeSamplesheet |${group}-ateambot |HPC Cluster with tmp mount |
+|2. ConcordanceCheck           |${group}-ateambot |HPC Cluster with tmp mount |
+|3. copyConcordanceCheckData   |${group}-dm       |HPC Cluster with prm mount |
+|4. notifications              |${group}-ateambot |HPC Cluster with tmp mount |
+|5. cleanup                    |${group}-ateambot |HPC Cluster with tmp mount |
 
 
 #### Location of job control and log files
 
  - LFS = logical file system; one of arc*, scr*, tmp* or prm*.
- - NGS_DNA and NGS_RNA pipelines produce data per project in a run sub dir for each (re)analysis of the data.
-   These pipelines do not generate data outside the projects folder.
- - NGS_Automated has it's own dirs and does NOT touch/modify/create any data in the projects dir.
+ - ConcordanceCheck has it's own dirs and does NOT touch/modify/create any data in the projects dir.
 
 ```
-/groups/${group}/${LFS}/
-                 |-- Samplesheets/
-                 |   |-- archive
-                 |   |-- new?
-                 |-- generatedscripts/
-                 |-- logs/............................ Logs from NGS_Automated.
-                 |   |-- ${SCRIPT_NAME}.mailinglist... List of email addresses used by the notifications script 
-                 |   |                                 to report on state [failed|finished] of script ${SCRIPT_NAME}.
-                 |   |                                 Use one email address per line or space separated addresses.
-                 |   |-- ${SCRIPT_NAME}.lock           Locking file to prevent multiple copies running simultaneously.
-                 |   `-- ${project}/
-                 |       |-- ${run}.${SCRIPT_NAME}.log
-                 |       |-- ${run}.${SCRIPT_NAME}.[started|failed|finished]
-                 |       |-- ${run}.${SCRIPT_NAME}.[started|failed|finished].mailed
-                 |-- projects/
-                 |   |-- ${run}.md5....... MD5 checksums for all files of the corresponding ${run} dir.
-                 |   `-- ${run}/
-                 |       |-- jobs/........ Generated Bash scripts for this pipeline/analysis run.
-                 |       |-- logs/........ Only logs for this pipeline/analysis run, so no logs from NGS_Automated.
-                 |       |-- qc/.......... Quality Control files.
-                 |       |-- rawdata/..... Relative symlinks to the rawdata and corresponding checksums.
-                 |       |   |-- array/... Symlinks point to actual data in ../../../../../rawdata/array/
-                 |       |   `-- ngs/..... Symlinks point to actual data in ../../../../../rawdata/ngs/
-                 |       `-- results/..... Result files for this pipeline/analysis run.
-                 `-- rawdata/
-                     |-- array/
-                     `-- ngs/
+/groups/${group}/${LFS}/concordance
+                 |-- samplesheets/
+                 |   |-- ${ConcordanceCheckID}.sampleId.txt
+                 |   |-- archive/
+                 |-- logs/............................ Logs from ConcordanceCheck.
+                 |       |-- ${ConcordanceCheckID}.${SCRIPT_NAME}.log
+                 |       |-- ${ConcordanceCheckID}.${SCRIPT_NAME}.[started|failed|finished]
+                 |       |-- ${ConcordanceCheckID}.${SCRIPT_NAME}.[started|failed|finished].mailed (not yet)
+                 |-- jobs/
+                 |-- array/
+                 |   |-- ${arrayVcf}
+                 |-- ngs/
+                 |   |-- ${ngsVcf}
+                 |-- results
+                 |   |-- ${ConcordanceCheckID}.sample
+                 |   |-- ${ConcordanceCheckID}.varinat
+                 |-- heranalyse
+                 |-- verificaties
+                 |-- tmp
+
+
 ```
 

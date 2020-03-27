@@ -1,0 +1,1 @@
+0 7 * * * /bin/bash -c "export SOURCE_HPC_ENV="True"; . ~/.bashrc; module load ConcordanceCheck/beta; copyConcordanceCheckData.sh -g umcg-atd"

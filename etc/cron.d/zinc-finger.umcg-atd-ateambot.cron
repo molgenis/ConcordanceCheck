@@ -1,0 +1,3 @@
+*/10 * * * * /bin/bash -c "export SOURCE_HPC_ENV="True"; . ~/.bashrc; module load ConcordanceCheck/beta; ConcordanceMakeSamplesheet.sh -g umcg-atd -a umcg-gsad"
+*/15 * * * * /bin/bash -c "export SOURCE_HPC_ENV="True"; . ~/.bashrc; module load ConcordanceCheck/beta; ConcordanceCheck.sh -g umcg-atd"
+*/15 * * * * /bin/bash -c "export SOURCE_HPC_ENV="True"; . ~/.bashrc; module load ConcordanceCheck/beta; notifications.sh -g umcg-atd -e"

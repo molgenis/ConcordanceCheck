@@ -25,6 +25,7 @@ Automation using Bash scripts and Cron jobs, inorder to automate the concordance
 See separate README_v1.md for details on the (deprecated) version
 ## Version 2.x
 
+
 #### Repo layout
 ```
 

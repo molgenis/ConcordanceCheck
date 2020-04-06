@@ -54,6 +54,7 @@ Usage:
 Options:
 	-h	Show this help.
 	-g	Group.
+	-a 	array group.
 	-n	Dry-run: Do not perform actual removal, but only print the remove commands instead.
 	-e	Enable email notification. (Disabled by default.)
 	-l	Log level.
@@ -82,6 +83,7 @@ EOH
 #
 log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Parsing commandline arguments ..."
 declare group=''
+declare arraygroup=''
 declare dryrun=''
 while getopts "g:a:l:nh" opt; do
 	case "${opt}" in
@@ -123,7 +125,7 @@ if [[ -z "${group:-}" ]]; then
 	log4Bash 'FATAL' "${LINENO}" "${FUNCNAME:-main}" '1' 'Must specify a group with -g.'
 fi
 if [[ -z "${arraygroup:-}" ]]; then
-	log4Bash 'FATAL' "${LINENO}" "${FUNCNAME:-main}" '1' 'Must specify a arraygroup with -a.'
+	log4Bash 'FATAL' "${LINENO}" "${FUNCNAME:-main}" '1' 'Must specify an arraygroup with -a.'
 fi
 if [[ -n "${dryrun:-}"  ]]; then
 	echo -e "\n\t\t #### Enabled dryrun option for cleanup ##### \n"

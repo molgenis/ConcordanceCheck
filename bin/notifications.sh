@@ -84,16 +84,16 @@ function notification() {
 	local -a _project_state_files=()
 	local    _timestamp
 	local    _project
-	local    _run
+	local    _run 
 	local    _subject
 	local    _body
 	local    _email_to
 	local    _lfs_root_dir
 	#
 	# The path to phase state files must be:
-	#	"${TMP_ROOT_DIR}/logs/${project}/${run}.${_phase}.${_state}"
-	#	"${SCR_ROOT_DIR}/logs/${project}/${run}.${_phase}.${_state}"
-	#	"${PRM_ROOT_DIR}/logs/${project}/${run}.${_phase}.${_state}"
+	#	"${TMP_ROOT_DIR}/concordance/logs/${run}.${_phase}.${_state}"
+	#	"${SCR_ROOT_DIR}/concordance/logs/${run}.${_phase}.${_state}"
+	#	"${PRM_ROOT_DIR}/concordance/logs/${run}.${_phase}.${_state}"
 	#
 	# For 'sequence projects':
 	#	${project} = the 'run' as determined by the sequencer.
@@ -108,10 +108,10 @@ function notification() {
 	declare -a _lfs_root_dirs=("${TMP_ROOT_DIR:-}" "${SCR_ROOT_DIR:-}" "${PRM_ROOT_DIR:-}" "${DAT_ROOT_DIR:-}")
 	for _lfs_root_dir in "${_lfs_root_dirs[@]}"
 	do
-		readarray -t _project_state_files < <(find "${_lfs_root_dir}/logs/" -maxdepth 2 -mindepth 2 -type f -name "*.${_phase}.${_state}")
+		readarray -t _project_state_files < <(find "${_lfs_root_dir}/concordance/logs/" -maxdepth 2 -mindepth 2 -type f -name "*.${_phase}.${_state}")
 		if [[ "${#_project_state_files[@]:-0}" -eq '0' ]]
 		then
-			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "No *.${_phase}.${_state} files present in ${_lfs_root_dir}/logs/*/."
+			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "No *.${_phase}.${_state} files present in ${_lfs_root_dir}/concordance/logs/*/."
 			continue
 		else
 			log4Bash 'TRACE' "${LINENO}" "${FUNCNAME:-main}" '0' "Found project state files: ${_project_state_files[*]}."
@@ -125,21 +125,21 @@ function notification() {
 		#     located at: ${_lfs_root_dir}/logs/${_phase}.{_state}.mailinglist
 		# The latter will overrule the former when both are found.
 		#
-		if [[ -r "${_lfs_root_dir}/logs/${_phase}.mailinglist" ]]
+		if [[ -r "${_lfs_root_dir}/concordance/logs/${_phase}.mailinglist" ]]
 		then
-			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Found ${_lfs_root_dir}/logs/${_phase}.mailinglist."
-			_email_to="$(< "${_lfs_root_dir}/logs/${_phase}.mailinglist" tr '\n' ' ')"
+			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Found ${_lfs_root_dir}/concordance/logs/${_phase}.mailinglist."
+			_email_to="$(< "${_lfs_root_dir}/concordance/logs/${_phase}.mailinglist" tr '\n' ' ')"
 			log4Bash 'TRACE' "${LINENO}" "${FUNCNAME:-main}" '0' "Parsed ${_phase}.mailinglist and will send mail to: ${_email_to}."
 		fi
-		if [[ -r "${_lfs_root_dir}/logs/${_phase}.{_state}.mailinglist" ]]
+		if [[ -r "${_lfs_root_dir}/concordance/logs/${_phase}.{_state}.mailinglist" ]]
 		then
-			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Found ${_lfs_root_dir}/logs/${_phase}.{_state}.mailinglist for more fine grained control over recipients for state {_state}."
-			_email_to="$(< "${_lfs_root_dir}/logs/${_phase}.{_state}.mailinglist" tr '\n' ' ')"
+			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Found ${_lfs_root_dir}/concordance/logs/${_phase}.{_state}.mailinglist for more fine grained control over recipients for state {_state}."
+			_email_to="$(< "${_lfs_root_dir}/concordance/logs/${_phase}.{_state}.mailinglist" tr '\n' ' ')"
 			log4Bash 'TRACE' "${LINENO}" "${FUNCNAME:-main}" '0' "Parsed ${_phase}.mailinglist and will send mail to: ${_email_to}."
 		fi
 		if [[ -z "${_email_to:-}" ]]
 		then
-			log4Bash 'ERROR' "${LINENO}" "${FUNCNAME:-main}" '0' "Cannot parse recipients from ${_lfs_root_dir}/logs/${_phase}.mailinglist nor from ${_lfs_root_dir}/logs/${_phase}.${_phase}.mailinglist."
+			log4Bash 'ERROR' "${LINENO}" "${FUNCNAME:-main}" '0' "Cannot parse recipients from ${_lfs_root_dir}/concordance/logs/${_phase}.mailinglist nor from ${_lfs_root_dir}/logs/${_phase}.${_phase}.mailinglist."
 			log4Bash 'FATAL' "${LINENO}" "${FUNCNAME:-main}" '1' "Cannot send notifications by mail. I'm giving up, bye bye."
 		fi
 		#
@@ -168,7 +168,7 @@ function notification() {
 				if [[ ! -e "${_project_state_file%failed}resubmitted" ]]
 				then
 					log4Bash 'TRACE' "${LINENO}" "${FUNCNAME:-main}" '0' "Project ${_project} was not resubmitted before -> resubmitting jobs ..."
-					cd "${_lfs_root_dir}/projects/${_project}/${_run}/jobs/"
+					cd "${_lfs_root_dir}/concordance/jobs/"
 					bash "submit.sh" > "${_project_state_file%failed}resubmitted"
 					cd -
 					log4Bash 'TRACE' "${LINENO}" "${FUNCNAME:-main}" '0' "Removing ${_project_state_file} and ${_project_state_file}.mailed."

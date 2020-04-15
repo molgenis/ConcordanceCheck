@@ -85,6 +85,7 @@ function notification() {
 	local    _timestamp
 	local    _subject
 	local    _body
+	local	 _run
 	local    _email_to
 	local    _lfs_root_dir
 	#
@@ -141,10 +142,8 @@ function notification() {
 			#
 			# Get project, run and timestamp from state file name/path.
 			#
-			local _project
 			local _project_state_file_name
 			local _timestamp
-			_project="$(basename "$(dirname "${_project_state_file}")")"
 			_project_state_file_name="$(basename "${_project_state_file}")"
 			_timestamp="$(date --date="$(LC_DATE=C stat --printf='%y' "${_project_state_file}" | cut -d ' ' -f1,2)" "+%Y-%m-%dT%H:%M:%S")"
 
@@ -153,14 +152,14 @@ function notification() {
 			#
 			if [[ -e "${_project_state_file}.mailed" ]]
 			then
-				log4Bash 'TRACE' "${LINENO}" "${FUNCNAME:-main}" '0' "Found ${_project_state_file}.mailed"
-				log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Skipping: ${_project}. Email was already sent for state ${_state} of phase ${_phase}."
+				log4Bash 'TRACE' "${LINENO}" "${FUNCNAME:-main}" '0' "Found ${_project_state_file_name}.mailed"
+				log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Skipping: ${_project_state_file_name}. Email was already sent for state ${_state} of phase ${_phase}."
 				continue
 			fi
 			#
 			# Compile message.
 			#
-			_subject="Project ${_project} has ${_state} for phase ${_phase} on ${HOSTNAME_SHORT} at ${_timestamp}."
+			_subject="Project ${_project_state_file_name} has ${_state} for phase ${_phase} on ${HOSTNAME_SHORT} at ${_timestamp}."
 			_body="$(cat "${_project_state_file}")"
 			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Email subject: ${_subject}"
 			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Email body   : ${_body}"

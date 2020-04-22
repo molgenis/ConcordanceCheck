@@ -99,7 +99,6 @@ EOH
 #
 log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Parsing commandline arguments ..."
 declare group=''
-declare email='false'
 declare dryrun=''
 while getopts "g:l:hn" opt
 do
@@ -206,9 +205,9 @@ log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Log files will be written 
 #  4. Recursively restrict access to the ~/.ssh dir to allow only the owner/user:
 #		chmod -R go-rwx ~/.ssh
 #
-declare -a sampleSheetsFromSourceServer=($(ssh ${DATA_MANAGER}@${HOSTNAME_TMP} "find ${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/ -mindepth 1 -maxdepth 1 \( -type l -o -type f \) -name *.sampleId.txt"))
+declare -a sampleSheetsFromSourceServer=($(ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "find ${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/ -mindepth 1 -maxdepth 1 \( -type l -o -type f \) -name *.sampleId.txt"))
 
-mkdir -p "/groups/${GROUP}/${DAT_LFS}/ConcordanceCheckOutput/"
+mkdir -p "/groups/${group}/${DAT_LFS}/ConcordanceCheckOutput/"
 
 if [[ "${#sampleSheetsFromSourceServer[@]:-0}" -eq '0' ]]
 then
@@ -219,30 +218,30 @@ else
 		#
 		# Process this sample sheet / run.
 		#
-		filePrefix="$(basename "${sampleSheet%.sampleId.txt}")"
+		filePrefix=$(basename "${sampleSheet%.sampleId.txt}")
 		log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Processing run ${filePrefix} ..."
-		ngsVcfId=$(ssh ${DATA_MANAGER}@${HOSTNAME_TMP} "awk '{if (NR>1){print \$2}}' ${sampleSheet}")
+		ngsVcfId=$(ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "awk '{if (NR>1){print \$2}}' ${sampleSheet}")
 
 		if ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" test -e "${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/logs/${filePrefix}.ConcordanceCheck.finished"
 		then
 			touch "${PRM_ROOT_DIR}/concordance/logs/${filePrefix}.copyConcordanceCheckData.started"
-			rsync -av ${DATA_MANAGER}@${HOSTNAME_TMP}:/${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/results/${filePrefix}.* "${PRM_ROOT_DIR}/concordance/results/" 
+			rsync -av "${DATA_MANAGER}@${HOSTNAME_TMP}:/${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/results/${filePrefix}.*" "${PRM_ROOT_DIR}/concordance/results/" 
 			log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "removing ${PRM_ROOT_DIR}/concordance/ngs/${ngsVcfId}.final.vcf.gz"
 			rm -f "${PRM_ROOT_DIR}/concordance/ngs/${ngsVcfId}.final.vcf.gz"
 
 			
-			cd "/groups/${GROUP}/${DAT_LFS}/ConcordanceCheckOutput/"
+			cd "/groups/${group}/${DAT_LFS}/ConcordanceCheckOutput/"
 			windowsPathDelimeter="\\"
 			#
 			# Create link in file
 			#
-			for i in $(ls "${PRM_ROOT_DIR}/concordance/results/${filePrefix}."*)
+			for i in $(ls "${PRM_ROOT_DIR}/concordance/results/${filePrefix}"(.variants|.sample))
 			do
-				fileName=$(basename ${i})
+				fileName=$(basename "${i}")
 				echo "\\\\zkh\appdata\medgen\leucinezipper${i//\//$windowsPathDelimeter}" > "${fileName}"
 				unix2dos "${fileName}"
 			done
-			ssh ${DATA_MANAGER}@${HOSTNAME_TMP} "mv ${sampleSheet} ${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/archive/"
+			ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "mv ${sampleSheet} ${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/archive/"
 			mv "${PRM_ROOT_DIR}/concordance/logs/${filePrefix}.copyConcordanceCheckData."{started,finished}
 
 		else

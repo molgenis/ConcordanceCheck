@@ -85,7 +85,6 @@ function notification() {
 	local    _timestamp
 	local    _subject
 	local    _body
-	local	 _run
 	local    _email_to
 	local    _lfs_root_dir
 	#

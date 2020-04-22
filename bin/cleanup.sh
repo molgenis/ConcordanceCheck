@@ -159,10 +159,10 @@ concordanceDir="/groups/${group}/${TMP_LFS}/concordance/"
 
 
 ##cleaning up files older than 30 days in PROJECTS and TMP when files are copied
-
-for i in $(find "${TMP_ROOT_DIR}/concordance/samplesheets/archive/" -maxdepth 1 -type f -mtime +30 -exec ls -d {} \;)
+while IFS= read -r -d '' i
+#for i in $(find "${TMP_ROOT_DIR}/concordance/samplesheets/archive/" -maxdepth 1 -type f -mtime +30 -exec ls -d {} \;)
 do
-	ConcordanceID=$(basename $i .sampleId.txt)
+	ConcordanceID=$(basename "${i}" .sampleId.txt)
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "${ConcordanceID}"
 	ngsId=$(sed 1d "${i}" | awk 'BEGIN {FS="\t"}{print $2}')
 	arrayId=$(sed 1d "${i}" | awk 'BEGIN {FS="\t"}{print $1}')
@@ -171,7 +171,7 @@ do
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' \
 	"check ${ConcordanceID}, ngsId:${ngsId} and arrayId:${arrayId} ngsDnaNo:${ngsDnaNo}, arrayDnaNo:${arrayDnaNo}"
 	
-	if ssh "${ATEAMBOTUSER}@${HOSTNAME_PRM}" test -e "/groups/${group}/${PRM_LFS}/concordance/logs/${ConcordanceID}.copyConcordanceCheckData.finished"
+	if ssh -n "${ATEAMBOTUSER}@${HOSTNAME_PRM}" test -e "/groups/${group}/${PRM_LFS}/concordance/logs/${ConcordanceID}.copyConcordanceCheckData.finished"
 	then
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' \
 			"rm -rf ${concordanceDir}/jobs/${ConcordanceID}.*/ 
@@ -192,7 +192,7 @@ do
 		fi
 
 	fi
-done
+done < <(find "${TMP_ROOT_DIR}/concordance/samplesheets/archive/" -maxdepth 1 -type f -mtime +30 -exec ls -d {} \;)
 
 log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' 'Finished successfully!'
 

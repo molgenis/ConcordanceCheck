@@ -183,10 +183,8 @@ do
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "processing ngs-vcf ${vcfFile}"
 	ngsFolderPrm="$(dirname "${vcfFile}")"
 	ngsVcfId=$(basename "${vcfFile}" ".final.vcf.gz")
-#	if ssh "${HOSTNAME_PRM}" "zcat ${vcfFile} | grep \"##FastQ_Barcode=\""
 	if ssh "${HOSTNAME_PRM}" "zcat ${vcfFile} | grep \'##FastQ_Barcode=\'"
 	then
-#		ngsBarcodeTmp=$(ssh "${HOSTNAME_PRM}" "zcat ${vcfFile} | grep \"##FastQ_Barcode=\"")
 		ngsBarcodeTmp=$(ssh "${HOSTNAME_PRM}" "zcat ${vcfFile} | grep \'##FastQ_Barcode=\'")
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "ngsBarcodeTmp=${ngsBarcodeTmp}"
 
@@ -198,7 +196,6 @@ do
 
 	ngsInfo=$(echo "${ngsVcfId}" | awk 'BEGIN {FS="_"}{OFS="_"}{print $3,$4,$5}')
 	ngsInfoList="${ngsInfo}${ngsBarcode}"
-	#ngsInfoList=$(echo "${ngsInfo}${ngsBarcode}")
 	dnaNo=$(echo "${ngsVcfId}" | awk 'BEGIN {FS="_"}{print substr($3,4)}')
 
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "info from ngs.vcf: ${ngsInfoList}"

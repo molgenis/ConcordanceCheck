@@ -173,7 +173,7 @@ concordanceDir="/groups/${GROUP}/${TMP_LFS}/concordance/"
 ngsVcfDir="${concordanceDir}/ngs/"
 arrayVcfDir="${concordanceDir}/array/"
 
-while IFS= read -r -d '' sampleSheet
+while IFS= read -r sampleSheet
 do
 	echo "______________________________________________________________________________" ## remove when script is finished
 	concordanceCheckId=$(basename "${sampleSheet}" .sampleId.txt)

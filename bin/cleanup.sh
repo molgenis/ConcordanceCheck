@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 #
@@ -159,8 +160,7 @@ concordanceDir="/groups/${group}/${TMP_LFS}/concordance/"
 
 
 ##cleaning up files older than 30 days in PROJECTS and TMP when files are copied
-while IFS= read -r -d '' i
-#for i in $(find "${TMP_ROOT_DIR}/concordance/samplesheets/archive/" -maxdepth 1 -type f -mtime +30 -exec ls -d {} \;)
+while IFS= read -r i
 do
 	ConcordanceID=$(basename "${i}" .sampleId.txt)
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "${ConcordanceID}"

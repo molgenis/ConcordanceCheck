@@ -167,31 +167,28 @@ done
 
 
 ##cleaning up files older than 31 days in LOGS directory and array symlink older than 4 months.
-#find "${PRM_ROOT_DIR}/concordance/logs/" -maxdepth 1 -type f -mtime +31 -iname '*.copyConcordanceCheckData.finished' -exec ls -d '{}' \; |  while IFS= read -r i
-for i in $(find "${PRM_ROOT_DIR}/concordance/logs/" -maxdepth 1 -type f -mtime +31 -iname '*.copyConcordanceCheckData.finished' -exec ls -d '{}' \;)
+while IFS= read -r i
 do
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "${i}"
 	if [ "${dryrun}" == "no" ]
 	then
 		rm -rf "${PRM_ROOT_DIR}/concordance/logs/${i}"
 	fi
-#done < <(find "${PRM_ROOT_DIR}/concordance/logs/" -maxdepth 1 -type f -mtime +31 -iname '*.copyConcordanceCheckData.finished' -exec ls -d '{}' \;)
-done
+done < <(find "${PRM_ROOT_DIR}/concordance/logs/" -maxdepth 1 -type f -mtime +31 -iname '*.copyConcordanceCheckData.finished' -exec ls -d '{}' \;)
 
 log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' 'cleanup logs directory finished successfully!'
 
 ## cleanup array symlinks in /groups/${arraygroups}/${PRM_LFS}/concordance/array/ older than 4 months
 
-#while IFS= read -r arraylink
-for arraylink in $(find "/groups/${arraygroup}/${PRM_LFS}/concordance/array/" -maxdepth 1 -type f -mtime +120 -iname '*.FINAL.vcf' -exec ls -d '{}' \;)
+while IFS= read -r arraylink
 do
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "${arraylink}"
 	if [ "${dryrun}" == "no" ]
 	then
 		rm -rf "/groups/${arraygroup}/${PRM_LFS}/concordance/array/${arraylink}"
 	fi
-#done < <(find "/groups/${arraygroup}/${PRM_LFS}/concordance/array/" -maxdepth 1 -type f -mtime +120 -iname '*.FINAL.vcf' -exec ls -d '{}' \;)
-done
+done < <(find "/groups/${arraygroup}/${PRM_LFS}/concordance/array/" -maxdepth 1 -type f -mtime +120 -iname '*.FINAL.vcf' -exec ls -d '{}' \;)
+
 
 trap - EXIT
 exit 0

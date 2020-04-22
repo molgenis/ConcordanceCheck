@@ -235,7 +235,7 @@ else
 			#
 			# Create link in file
 			#
-			for i in $(ls "${PRM_ROOT_DIR}/concordance/results/${filePrefix}"(.variants|.sample))
+			for i in $(ls "${PRM_ROOT_DIR}/concordance/results/${filePrefix}"{.variants,.sample})
 			do
 				fileName=$(basename "${i}")
 				echo "\\\\zkh\appdata\medgen\leucinezipper${i//\//$windowsPathDelimeter}" > "${fileName}"

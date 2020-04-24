@@ -83,35 +83,24 @@ function notification() {
 	local    _state="${1#*:}"
 	local -a _project_state_files=()
 	local    _timestamp
-	local    _project
-	local    _run
 	local    _subject
 	local    _body
 	local    _email_to
 	local    _lfs_root_dir
 	#
 	# The path to phase state files must be:
-	#	"${TMP_ROOT_DIR}/logs/${project}/${run}.${_phase}.${_state}"
-	#	"${SCR_ROOT_DIR}/logs/${project}/${run}.${_phase}.${_state}"
-	#	"${PRM_ROOT_DIR}/logs/${project}/${run}.${_phase}.${_state}"
-	#
-	# For 'sequence projects':
-	#	${project} = the 'run' as determined by the sequencer.
-	#	${run}     = the 'run' as determined by the sequencer.
-	# Hence ${project} = {run} = [SequencingStartDate]_[Sequencer]_[RunNumber]_[Flowcell]
-	#
-	# For 'analysis projects':
-	#	${project} = the 'project' name as specified in the sample sheet.
-	#	${run}     = the incremental 'analysis run number'. Starts with run01 and incremented in case of re-analysis.
+	#	"${TMP_ROOT_DIR}/concordance/logs/*.${_phase}.${_state}"
+	#	"${PRM_ROOT_DIR}/concordance/logs/*.${_phase}.${_state}"
 	#
 	log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Processing projects with phase ${_phase} in state: ${_state} ..."
-	declare -a _lfs_root_dirs=("${TMP_ROOT_DIR:-}" "${SCR_ROOT_DIR:-}" "${PRM_ROOT_DIR:-}" "${DAT_ROOT_DIR:-}")
+	declare -a _lfs_root_dirs=("${TMP_ROOT_DIR:-}" "${PRM_ROOT_DIR:-}")
 	for _lfs_root_dir in "${_lfs_root_dirs[@]}"
 	do
-		readarray -t _project_state_files < <(find "${_lfs_root_dir}/logs/" -maxdepth 2 -mindepth 2 -type f -name "*.${_phase}.${_state}")
+		readarray -t _project_state_files < <(find "${_lfs_root_dir}/concordance/logs/" -maxdepth 1 -mindepth 1 -type f -name "*.${_phase}.${_state}")
 		if [[ "${#_project_state_files[@]:-0}" -eq '0' ]]
 		then
-			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "No *.${_phase}.${_state} files present in ${_lfs_root_dir}/logs/*/."
+			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "project_state_files ${#_project_state_files[@]:-0}"
+			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "No *.${_phase}.${_state} files present in ${_lfs_root_dir}/concordance/logs/"
 			continue
 		else
 			log4Bash 'TRACE' "${LINENO}" "${FUNCNAME:-main}" '0' "Found project state files: ${_project_state_files[*]}."
@@ -125,21 +114,23 @@ function notification() {
 		#     located at: ${_lfs_root_dir}/logs/${_phase}.{_state}.mailinglist
 		# The latter will overrule the former when both are found.
 		#
-		if [[ -r "${_lfs_root_dir}/logs/${_phase}.mailinglist" ]]
+		if [[ -r "${_lfs_root_dir}/concordance/logs/${_phase}.mailinglist" ]]
 		then
-			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Found ${_lfs_root_dir}/logs/${_phase}.mailinglist."
-			_email_to="$(< "${_lfs_root_dir}/logs/${_phase}.mailinglist" tr '\n' ' ')"
-			log4Bash 'TRACE' "${LINENO}" "${FUNCNAME:-main}" '0' "Parsed ${_phase}.mailinglist and will send mail to: ${_email_to}."
+			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Found ${_lfs_root_dir}/concordance/logs/${_phase}.mailinglist."
+			_email_to="$(< "${_lfs_root_dir}/concordance/logs/${_phase}.mailinglist" tr '\n' ' ')"
+			log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Parsed ${_phase}.mailinglist and will send mail to: ${_email_to}."
 		fi
-		if [[ -r "${_lfs_root_dir}/logs/${_phase}.{_state}.mailinglist" ]]
-		then
-			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Found ${_lfs_root_dir}/logs/${_phase}.{_state}.mailinglist for more fine grained control over recipients for state {_state}."
-			_email_to="$(< "${_lfs_root_dir}/logs/${_phase}.{_state}.mailinglist" tr '\n' ' ')"
-			log4Bash 'TRACE' "${LINENO}" "${FUNCNAME:-main}" '0' "Parsed ${_phase}.mailinglist and will send mail to: ${_email_to}."
-		fi
+########################################### For now not neccessary, might be convienent for later. 
+#		if [[ -r "${_lfs_root_dir}/concordance/logs/${_phase}.{_state}.mailinglist" ]]
+#		then
+#			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Found ${_lfs_root_dir}/concordance/logs/${_phase}.{_state}.mailinglist for more fine grained control over recipients for state {_state}."
+#			_email_to="$(< "${_lfs_root_dir}/concordance/logs/${_phase}.{_state}.mailinglist" tr '\n' ' ')"
+#			log4Bash 'TRACE' "${LINENO}" "${FUNCNAME:-main}" '0' "Parsed ${_phase}.mailinglist and will send mail to: ${_email_to}."
+#		fi
+###########################################
 		if [[ -z "${_email_to:-}" ]]
 		then
-			log4Bash 'ERROR' "${LINENO}" "${FUNCNAME:-main}" '0' "Cannot parse recipients from ${_lfs_root_dir}/logs/${_phase}.mailinglist nor from ${_lfs_root_dir}/logs/${_phase}.${_phase}.mailinglist."
+			log4Bash 'ERROR' "${LINENO}" "${FUNCNAME:-main}" '0' "Cannot parse recipients from ${_lfs_root_dir}/concordance/logs/${_phase}.mailinglist nor from ${_lfs_root_dir}/logs/${_phase}.${_phase}.mailinglist."
 			log4Bash 'FATAL' "${LINENO}" "${FUNCNAME:-main}" '1' "Cannot send notifications by mail. I'm giving up, bye bye."
 		fi
 		#
@@ -150,50 +141,24 @@ function notification() {
 			#
 			# Get project, run and timestamp from state file name/path.
 			#
-			local _project
 			local _project_state_file_name
-			local _run
 			local _timestamp
-			_project="$(basename "$(dirname "${_project_state_file}")")"
 			_project_state_file_name="$(basename "${_project_state_file}")"
-			_run="${_project_state_file_name%%.*}"
 			_timestamp="$(date --date="$(LC_DATE=C stat --printf='%y' "${_project_state_file}" | cut -d ' ' -f1,2)" "+%Y-%m-%dT%H:%M:%S")"
-			#
-			# Check is we should automatically resubmit jobs for a failed analysis pipeline.
-			#
-			if [[ "${_state}" == 'pipeline' && "${_state}" == 'failed' ]]
-			then
-				log4Bash 'TRACE' "${LINENO}" "${FUNCNAME:-main}" '0' "Pipeline has state failed; checking if we should resubmit jobs ..."
-				
-				if [[ ! -e "${_project_state_file%failed}resubmitted" ]]
-				then
-					log4Bash 'TRACE' "${LINENO}" "${FUNCNAME:-main}" '0' "Project ${_project} was not resubmitted before -> resubmitting jobs ..."
-					cd "${_lfs_root_dir}/projects/${_project}/${_run}/jobs/"
-					bash "submit.sh" > "${_project_state_file%failed}resubmitted"
-					cd -
-					log4Bash 'TRACE' "${LINENO}" "${FUNCNAME:-main}" '0' "Removing ${_project_state_file} and ${_project_state_file}.mailed."
-					rm -f "${_project_state_file}" "${_project_state_file}.mailed"
-					trackAndTracePut 'status_projects' "${_project}" 'message' "Jobs have been resubmitted on $(date -r "${_project_state_file%failed}resubmitted")."
-					continue
-				else
-					log4Bash 'TRACE' "${LINENO}" "${FUNCNAME:-main}" '0' "Found ${_project_state_file%failed}resubmitted"
-					log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Project ${_project} failed again -> will not resubmit jobs."
-					trackAndTracePut 'status_projects' "${_project}" 'message' "Pipeline crashed again (even after a resubmit) on ${_timestamp}"
-				fi
-			fi
+
 			#
 			# Check if email was already send.
 			#
 			if [[ -e "${_project_state_file}.mailed" ]]
 			then
-				log4Bash 'TRACE' "${LINENO}" "${FUNCNAME:-main}" '0' "Found ${_project_state_file}.mailed"
-				log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Skipping: ${_project}/${_run}. Email was already sent for state ${_state} of phase ${_phase}."
+				log4Bash 'TRACE' "${LINENO}" "${FUNCNAME:-main}" '0' "Found ${_project_state_file_name}.mailed"
+				log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Skipping: ${_project_state_file_name}. Email was already sent for state ${_state} of phase ${_phase}."
 				continue
 			fi
 			#
 			# Compile message.
 			#
-			_subject="Project ${_project}/${_run} has ${_state} for phase ${_phase} on ${HOSTNAME_SHORT} at ${_timestamp}."
+			_subject="Project ${_project_state_file_name} has ${_state} for phase ${_phase} on ${HOSTNAME_SHORT} at ${_timestamp}."
 			_body="$(cat "${_project_state_file}")"
 			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Email subject: ${_subject}"
 			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Email body   : ${_body}"

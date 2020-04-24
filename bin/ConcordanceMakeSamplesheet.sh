@@ -88,7 +88,6 @@ EOH
 # Get commandline arguments.
 #
 log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Parsing commandline arguments ..."
-declare group=''
 while getopts ":g:a:l:h" opt
 do
 	case "${opt}" in
@@ -178,15 +177,15 @@ concordanceDir="/groups/${NGSGROUP}/${TMP_LFS}/concordance/"
 ngsVcfDirPRM="/groups/${NGSGROUP}/prm0*/concordance/ngs/"
 arrayVcfDirPRM="/groups/${ARRAYGROUP}/${PRM_LFS}/concordance/array/"
 
-for vcfFile in $(ssh "${HOSTNAME_PRM}" "find ${ngsVcfDirPRM} \( -type f -o -type l \) -name *final.vcf.gz")
+for vcfFile in $(ssh "${HOSTNAME_PRM}" "find ${ngsVcfDirPRM} \( -type f -o -type l \) -name '*final.vcf.gz'")
 do
 
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "processing ngs-vcf ${vcfFile}"
 	ngsFolderPrm="$(dirname "${vcfFile}")"
 	ngsVcfId=$(basename "${vcfFile}" ".final.vcf.gz")
-	if ssh "${HOSTNAME_PRM}" "zcat ${vcfFile} | grep \"##FastQ_Barcode=\""
+	if ssh "${HOSTNAME_PRM}" "zcat ${vcfFile} | grep \'##FastQ_Barcode=\'"
 	then
-		ngsBarcodeTmp=$(ssh "${HOSTNAME_PRM}" "zcat ${vcfFile} | grep \"##FastQ_Barcode=\"")
+		ngsBarcodeTmp=$(ssh "${HOSTNAME_PRM}" "zcat ${vcfFile} | grep \'##FastQ_Barcode=\'")
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "ngsBarcodeTmp=${ngsBarcodeTmp}"
 
 		ngsBarcode=$(echo "${ngsBarcodeTmp}" | awk 'BEGIN {FS="="}{print "_"$2}')
@@ -196,13 +195,12 @@ do
 	fi
 
 	ngsInfo=$(echo "${ngsVcfId}" | awk 'BEGIN {FS="_"}{OFS="_"}{print $3,$4,$5}')
-	ngsInfoList=$(echo "${ngsInfo}${ngsBarcode}")
-
+	ngsInfoList="${ngsInfo}${ngsBarcode}"
 	dnaNo=$(echo "${ngsVcfId}" | awk 'BEGIN {FS="_"}{print substr($3,4)}')
 
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "info from ngs.vcf: ${ngsInfoList}"
 
-	checkArrayVcf=$(ssh "${HOSTNAME_PRM}" "find ${arrayVcfDirPRM} \( -type f -o -type l \) -name '*DNA-"${dnaNo}"_*.FINAL.vcf' ")
+	checkArrayVcf=$(ssh "${HOSTNAME_PRM}" "find ${arrayVcfDirPRM} \( -type f -o -type l \) -name '*DNA-${dnaNo}_*.FINAL.vcf' ")
 
 	copyArrayFile="false"
 	cluster=""
@@ -232,7 +230,7 @@ do
 	then
 		#rsync --copy-links ${HOSTNAME_PRM}:${arrayVcfDirPRM}/DNA-${dnaNo}_*.FINAL.vcf "${concordanceDir}/array/"
 		echo "cluster: ${cluster}"
-		arrayFile=$(ssh ${cluster} "ls -1 ${arrayVcfDirPRM}/DNA-${dnaNo}_*.FINAL.vcf")
+		arrayFile=$(ssh "${cluster}" "ls -1 ${arrayVcfDirPRM}/DNA-${dnaNo}_*.FINAL.vcf")
 		echo "--------- ${arrayFile}"
 		arrayId="$(basename "${arrayFile}" .FINAL.vcf)"
 		arrayInfoList=$(echo "${arrayId}" | awk 'BEGIN {FS="_"}{OFS="_"}{print $1,$2,$3,$5,$6}')

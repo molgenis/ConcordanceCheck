@@ -225,6 +225,8 @@ cat << EOH > "${concordanceDir}/jobs/${concordanceCheckId}.sh"
 #SBATCH --open-mode=append
 #SBATCH --export=NONE
 #SBATCH --get-user-env=60L
+
+set -eu
 	module load "${htsLibVersion}"
 	module load "${compareGenotypeCallsVersion}"
 	module load "${bedToolsVersion}"

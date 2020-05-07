@@ -249,7 +249,13 @@ set -eu
 	mv "${concordanceDir}/tmp/${concordanceCheckId}.variants" "${concordanceDir}/results/"
 
 	echo "finished"
-	mv "/groups/${GROUP}/${TMP_LFS}/concordance/logs/${concordanceCheckId}.ConcordanceCheck."{started,finished}
+	if [ -e "/groups/${GROUP}/${TMP_LFS}/concordance/logs/${concordanceCheckId}.ConcordanceCheck.started" ]
+	then
+		mv "/groups/${GROUP}/${TMP_LFS}/concordance/logs/${concordanceCheckId}.ConcordanceCheck."{started,finished}
+	else
+		touch "/groups/${GROUP}/${TMP_LFS}/concordance/logs/${concordanceCheckId}.ConcordanceCheck.finished"
+	fi
+
 	mv "${concordanceDir}/jobs/${concordanceCheckId}.sh."{started,finished} 
 EOH
 	fi

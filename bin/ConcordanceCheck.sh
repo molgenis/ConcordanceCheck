@@ -243,9 +243,9 @@ set -eu
 	-o "${concordanceDir}/tmp/${concordanceCheckId}" \
 	-sva
 
-	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "moving ${concordanceDir}/tmp/${concordanceCheckId}.sample to ${concordanceDir}/results/"
+	echo "moving ${concordanceDir}/tmp/${concordanceCheckId}.sample to ${concordanceDir}/results/" 
 	mv "${concordanceDir}/tmp/${concordanceCheckId}.sample" "${concordanceDir}/results/"
-	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "moving ${concordanceDir}/tmp/${concordanceCheckId}.variants to ${concordanceDir}/results/"
+	echo "moving ${concordanceDir}/tmp/${concordanceCheckId}.variants to ${concordanceDir}/results/"
 	mv "${concordanceDir}/tmp/${concordanceCheckId}.variants" "${concordanceDir}/results/"
 
 	echo "finished"

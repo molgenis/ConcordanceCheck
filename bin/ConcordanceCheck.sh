@@ -219,9 +219,9 @@ cat << EOH > "${concordanceDir}/jobs/${concordanceCheckId}.sh"
 #SBATCH --job-name=Concordance_${arrayId}
 #SBATCH --output=${concordanceDir}/jobs/${arrayId}.out
 #SBATCH --error=${concordanceDir}/jobs/${arrayId}.err
-#SBATCH --time=05:59:00
+#SBATCH --time=00:30:00
 #SBATCH --cpus-per-task 1
-#SBATCH --mem 10gb
+#SBATCH --mem 6gb
 #SBATCH --open-mode=append
 #SBATCH --export=NONE
 #SBATCH --get-user-env=60L

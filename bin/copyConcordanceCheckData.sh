@@ -243,7 +243,7 @@ else
 				echo "\\\\zkh\appdata\medgen\leucinezipper${i//\//${windowsPathDelimeter}}" > "${fileName}"
 				#echo "\\\\zkh\appdata\medgen\leucinezipper${i//\//$windowsPathDelimeter}" > "${fileName}"
 				unix2dos "${fileName}"
-			done < <(find "${PRM_ROOT_DIR}/concordance/results/ -maxdepth -type f -iname "${filePrefix}"*")
+			done < <(find "${PRM_ROOT_DIR}/concordance/results/" -maxdepth 1 -type f -iname "${filePrefix}.*")
 			ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "mv ${sampleSheet} ${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/archive/"
 			mv "${PRM_ROOT_DIR}/concordance/logs/${filePrefix}.copyConcordanceCheckData."{started,finished}
 

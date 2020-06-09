@@ -205,7 +205,10 @@ log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Log files will be written 
 #  4. Recursively restrict access to the ~/.ssh dir to allow only the owner/user:
 #		chmod -R go-rwx ~/.ssh
 #
-declare -a sampleSheetsFromSourceServer=($(ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "find \"${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/\" -mindepth 1 -maxdepth 1 \( -type l -o -type f \) -name '*.sampleId.txt'"))
+
+declare -a sampleSheetsFromSourceServer
+# shellcheck disable=SC2029
+readarray -t sampleSheetsFromSourceServer< <($(ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "find \"${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/\" -mindepth 1 -maxdepth 1 \( -type l -o -type f \) -name '*.sampleId.txt'"))
 
 mkdir -p "/groups/${group}/${DAT_LFS}/ConcordanceCheckOutput/"
 
@@ -237,7 +240,7 @@ else
 			while IFS= read -r i
 			do
 				fileName=$(basename "${i}")
-				printf '\\\\zkh\appdata\medgen\leucinezipper%s\r\n' "${i//\//$windowsPathDelimeter}" > "${fileName}"
+				printf '\\\\zkh\appdata\medgen\leucinezipper%s\r\n' "${i//\//${windowsPathDelimeter}}" > "${fileName}"
 			done < <(find "${PRM_ROOT_DIR}/concordance/results/" -maxdepth 1 -type f -iname "${filePrefix}.*")
 			# shellcheck disable=SC2029
 			ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "mv \"${sampleSheet}\" \"${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/archive/\""

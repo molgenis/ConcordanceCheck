@@ -206,6 +206,7 @@ log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Log files will be written 
 #		chmod -R go-rwx ~/.ssh
 #
 declare -a sampleSheetsFromSourceServer=($(ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "find ${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/ -mindepth 1 -maxdepth 1 \( -type l -o -type f \) -name *.sampleId.txt"))
+#declare -a sampleSheetsFromSourceServer=($(ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "find ${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/ -mindepth 1 -maxdepth 1 \( -type l -o -type f \) -name *.sampleId.txt"))
 
 mkdir -p "/groups/${group}/${DAT_LFS}/ConcordanceCheckOutput/"
 
@@ -235,12 +236,14 @@ else
 			#
 			# Create link in file
 			#
-			for i in $(ls "${PRM_ROOT_DIR}/concordance/results/${filePrefix}"{.variants,.sample})
+			while IFS= read -r i
+			#for i in $(ls "${PRM_ROOT_DIR}/concordance/results/${filePrefix}"{.variants,.sample})
 			do
 				fileName=$(basename "${i}")
-				echo "\\\\zkh\appdata\medgen\leucinezipper${i//\//$windowsPathDelimeter}" > "${fileName}"
+				echo "\\\\zkh\appdata\medgen\leucinezipper${i//\//${windowsPathDelimeter}}" > "${fileName}"
+				#echo "\\\\zkh\appdata\medgen\leucinezipper${i//\//$windowsPathDelimeter}" > "${fileName}"
 				unix2dos "${fileName}"
-			done
+			done < <(find "${PRM_ROOT_DIR}/concordance/results/ -maxdepth -type f -iname "${filePrefix}"{.variants,.sample})
 			ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "mv ${sampleSheet} ${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/archive/"
 			mv "${PRM_ROOT_DIR}/concordance/logs/${filePrefix}.copyConcordanceCheckData."{started,finished}
 

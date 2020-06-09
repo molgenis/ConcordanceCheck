@@ -208,7 +208,7 @@ log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Log files will be written 
 
 declare -a sampleSheetsFromSourceServer
 # shellcheck disable=SC2029
-readarray -t sampleSheetsFromSourceServer< <($(ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "find \"${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/\" -mindepth 1 -maxdepth 1 \( -type l -o -type f \) -name '*.sampleId.txt'"))
+readarray -t sampleSheetsFromSourceServer< <(ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "find \"${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/\" -mindepth 1 -maxdepth 1 \( -type l -o -type f \) -name '*.sampleId.txt'")
 
 mkdir -p "/groups/${group}/${DAT_LFS}/ConcordanceCheckOutput/"
 

@@ -205,7 +205,10 @@ log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Log files will be written 
 #  4. Recursively restrict access to the ~/.ssh dir to allow only the owner/user:
 #		chmod -R go-rwx ~/.ssh
 #
-declare -a sampleSheetsFromSourceServer=($(ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "find ${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/ -mindepth 1 -maxdepth 1 \( -type l -o -type f \) -name *.sampleId.txt"))
+
+declare -a sampleSheetsFromSourceServer
+# shellcheck disable=SC2029
+readarray -t sampleSheetsFromSourceServer< <(ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "find \"${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/\" -mindepth 1 -maxdepth 1 \( -type l -o -type f \) -name '*.sampleId.txt'")
 
 mkdir -p "/groups/${group}/${DAT_LFS}/ConcordanceCheckOutput/"
 
@@ -220,28 +223,27 @@ else
 		#
 		filePrefix=$(basename "${sampleSheet%.sampleId.txt}")
 		log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Processing run ${filePrefix} ..."
-		ngsVcfId=$(ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "awk '{if (NR>1){print \$2}}' ${sampleSheet}")
-
+		# shellcheck disable=SC2029
+		ngsVcfId=$(ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "awk '{if (NR>1){print \$2}}' \"${sampleSheet}\"")
+		# shellcheck disable=SC2029
 		if ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" test -e "${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/logs/${filePrefix}.ConcordanceCheck.finished"
 		then
 			touch "${PRM_ROOT_DIR}/concordance/logs/${filePrefix}.copyConcordanceCheckData.started"
 			rsync -av "${DATA_MANAGER}@${HOSTNAME_TMP}:/${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/results/${filePrefix}.*" "${PRM_ROOT_DIR}/concordance/results/" 
 			log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "removing ${PRM_ROOT_DIR}/concordance/ngs/${ngsVcfId}.final.vcf.gz"
 			rm -f "${PRM_ROOT_DIR}/concordance/ngs/${ngsVcfId}.final.vcf.gz"
-
-			
 			cd "/groups/${group}/${DAT_LFS}/ConcordanceCheckOutput/"
 			windowsPathDelimeter="\\"
 			#
 			# Create link in file
 			#
-			for i in $(ls "${PRM_ROOT_DIR}/concordance/results/${filePrefix}"{.variants,.sample})
+			while IFS= read -r i
 			do
 				fileName=$(basename "${i}")
-				echo "\\\\zkh\appdata\medgen\leucinezipper${i//\//$windowsPathDelimeter}" > "${fileName}"
-				unix2dos "${fileName}"
-			done
-			ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "mv ${sampleSheet} ${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/archive/"
+				printf '\\\\zkh\appdata\medgen\leucinezipper%s\r\n' "${i//\//${windowsPathDelimeter}}" > "${fileName}"
+			done < <(find "${PRM_ROOT_DIR}/concordance/results/" -maxdepth 1 -type f -iname "${filePrefix}.*")
+			# shellcheck disable=SC2029
+			ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "mv \"${sampleSheet}\" \"${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/archive/\""
 			mv "${PRM_ROOT_DIR}/concordance/logs/${filePrefix}.copyConcordanceCheckData."{started,finished}
 
 		else

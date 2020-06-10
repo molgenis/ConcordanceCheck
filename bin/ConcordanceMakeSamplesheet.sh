@@ -177,15 +177,18 @@ concordanceDir="/groups/${NGSGROUP}/${TMP_LFS}/concordance/"
 ngsVcfDirPRM="/groups/${NGSGROUP}/prm0*/concordance/ngs/"
 arrayVcfDirPRM="/groups/${ARRAYGROUP}/${PRM_LFS}/concordance/array/"
 
-for vcfFile in $(ssh "${HOSTNAME_PRM}" "find ${ngsVcfDirPRM} \( -type f -o -type l \) -name '*final.vcf.gz'")
+# shellcheck disable=SC2029
+for vcfFile in $(ssh "${HOSTNAME_PRM}" "find \"${ngsVcfDirPRM}\" \( -type f -o -type l \) -name '*final.vcf.gz'")
 do
 
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "processing ngs-vcf ${vcfFile}"
 	ngsFolderPrm="$(dirname "${vcfFile}")"
 	ngsVcfId=$(basename "${vcfFile}" ".final.vcf.gz")
-	if ssh "${HOSTNAME_PRM}" "zcat ${vcfFile} | grep \'##FastQ_Barcode=\'"
+	# shellcheck disable=SC2029
+	if ssh "${HOSTNAME_PRM}" "zcat \"${vcfFile}\" | grep \'##FastQ_Barcode=\'"
 	then
-		ngsBarcodeTmp=$(ssh "${HOSTNAME_PRM}" "zcat ${vcfFile} | grep \'##FastQ_Barcode=\'")
+		# shellcheck disable=SC2029
+		ngsBarcodeTmp=$(ssh "${HOSTNAME_PRM}" "zcat \"${vcfFile}\" | grep \'##FastQ_Barcode=\'")
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "ngsBarcodeTmp=${ngsBarcodeTmp}"
 
 		ngsBarcode=$(echo "${ngsBarcodeTmp}" | awk 'BEGIN {FS="="}{print "_"$2}')
@@ -199,8 +202,8 @@ do
 	dnaNo=$(echo "${ngsVcfId}" | awk 'BEGIN {FS="_"}{print substr($3,4)}')
 
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "info from ngs.vcf: ${ngsInfoList}"
-
-	checkArrayVcf=$(ssh "${HOSTNAME_PRM}" "find ${arrayVcfDirPRM} \( -type f -o -type l \) -name '*DNA-${dnaNo}_*.FINAL.vcf' ")
+	# shellcheck disable=SC2029
+	checkArrayVcf=$(ssh "${HOSTNAME_PRM}" "find \"${arrayVcfDirPRM}\" \( -type f -o -type l \) -name '*DNA-${dnaNo}_*.FINAL.vcf' ")
 
 	copyArrayFile="false"
 	cluster=""

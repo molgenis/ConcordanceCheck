@@ -185,10 +185,10 @@ do
 	ngsFolderPrm="$(dirname "${vcfFile}")"
 	ngsVcfId=$(basename "${vcfFile}" ".final.vcf.gz")
 	# shellcheck disable=SC2029
-	if ssh "${HOSTNAME_PRM}" "zcat \"${vcfFile}\" | grep \""##FastQ_Barcode=\""
+	if ssh "${HOSTNAME_PRM}" "zcat \"${vcfFile}\" | grep '##FastQ_Barcode='"
 	then
 		# shellcheck disable=SC2029
-		ngsBarcodeTmp=$(ssh "${HOSTNAME_PRM}" "zcat \"${vcfFile}\" | grep \""##FastQ_Barcode=\"")
+		ngsBarcodeTmp=$(ssh "${HOSTNAME_PRM}" "zcat \"${vcfFile}\" | grep '##FastQ_Barcode='")
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "ngsBarcodeTmp=${ngsBarcodeTmp}"
 
 		ngsBarcode=$(echo "${ngsBarcodeTmp}" | awk 'BEGIN {FS="="}{print "_"$2}')

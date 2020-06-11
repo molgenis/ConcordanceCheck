@@ -178,7 +178,7 @@ ngsVcfDirPRM="/groups/${NGSGROUP}/prm0*/concordance/ngs/"
 arrayVcfDirPRM="/groups/${ARRAYGROUP}/${PRM_LFS}/concordance/array/"
 
 # shellcheck disable=SC2029
-for vcfFile in $(ssh "${HOSTNAME_PRM}" "find "${ngsVcfDirPRM}" \( -type f -o -type l \) -name '*final.vcf.gz'")
+for vcfFile in $(ssh "${HOSTNAME_PRM}" "find ${ngsVcfDirPRM} \( -type f -o -type l \) -name '*final.vcf.gz'")
 do
 
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "processing ngs-vcf ${vcfFile}"

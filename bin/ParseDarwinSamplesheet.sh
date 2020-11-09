@@ -79,15 +79,15 @@ EOH
 
 array_contains () {
     local array="$1[@]"
-    local seeking=$2
+    local seeking="${2}"
     local in=1
     for element in "${!array-}"; do
-        if [[ "$element" == "$seeking" ]]; then
+        if [[ "${element}" == "${seeking}" ]]; then
             in=0
             break
         fi
     done
-    return $in
+    return "${in}"
 }
 
 #
@@ -191,7 +191,7 @@ fi
 
 # 
 
-sampleSheetsDarwin=($(find /groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/ -maxdepth 1 -type f -name '*.csv'))
+mapfile -t sampleSheetsDarwin < <(find /groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/ -maxdepth 1 -type f -name '*.csv')
 if [[ "${#sampleSheetsDarwin[@]:-0}" -eq '0' ]]
 then
 	log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "No sample sheets found @ /groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/: There is nothing to do."
@@ -202,30 +202,30 @@ else
 	do
 		samplesheetName="$(basename "${darwinSamplesheet}" ".csv")"
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Processing sample sheet: ${darwinSamplesheet} ..."
-		projectNGS=$(awk '{print $2}' ${darwinSamplesheet})
-		dnaNGS=$(awk '{print $3}' ${darwinSamplesheet})
-		projectArray=$(awk '{print $4}' ${darwinSamplesheet})
-		dnaArray=$(awk '{print $5}' ${darwinSamplesheet})
+		projectNGS=$(awk '{print $2}' "${darwinSamplesheet}")
+		dnaNGS=$(awk '{print $3}' "${darwinSamplesheet}")
+		projectArray=$(awk '{print $4}' "${darwinSamplesheet}")
+		dnaArray=$(awk '{print $5}' "${darwinSamplesheet}")
 		ngsVcf=()
 		arrayVcf=()
-		
-		ngsPath=("/groups/${NGSGROUP}/prm0"*"/projects/${projectNGS}/run01/results/variants/")
+		# shellcheck disable=SC2207
+		ngsPath=($("/groups/${NGSGROUP}/prm0"*"/projects/${projectNGS}/run01/results/variants/"))
 		if [ -e "${ngsPath[0]}" ]
 		then
-			ngsVcf=($(find "/groups/${NGSGROUP}/prm0"*"/projects/${projectNGS}/run01/results/variants/" -maxdepth 1 -name "*${dnaNGS}*.vcf.gz"))
+			mapfilengsVcf=($(find "/groups/${NGSGROUP}/prm0"*"/projects/${projectNGS}/run01/results/variants/" -maxdepth 1 -name "*${dnaNGS}*.vcf.gz"))
 			if [[ "${#ngsVcf[@]:-0}" -eq '0' ]]
 			then
 				log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "/groups/${GROUP}/prm0*/projects/${projectNGS}/run*/results/variants/*${dnaNGS}*.vcf.gz NOT FOUND! skipped"
 			else
-				log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Found back NGS ${ngsVcf}"
+				log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Found back NGS ${ngsVcf[0]}"
 				ngsVcfId=$(basename "${ngsVcf[0]}" ".final.vcf.gz")
 			fi
 		else
 			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The NGS project folder cannot be found: /groups/${NGSGROUP}/prm0*/projects/${projectNGS}/run01/results/variants/"
 			continue
 		fi
-		
-		arrayPath=("/groups/${ARRAYGROUP}/prm0"*"/projects/${projectArray}/run01/results/vcf/")
+		# shellcheck disable=SC2207
+		arrayPath=($("/groups/${ARRAYGROUP}/prm0"*"/projects/${projectArray}/run01/results/vcf/"))
 		if [ -e "${arrayPath[0]}" ]
 		then
 			arrayVcf=($(find "/groups/${ARRAYGROUP}/prm0"*"/projects/${projectArray}/run01/results/vcf" -maxdepth 1  -name "${dnaArray}*.vcf"))
@@ -234,7 +234,7 @@ else
 			then
 				log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "/groups/${ARRAYGROUP}/prm0*/projects/${projectArray}/run*/results/vcf/${dnaArray}*.vcf NOT FOUND! skipped"
 			else
-				log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Found back Array: ${arrayVcf}"
+				log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Found back Array: ${arrayVcf[0]}"
 				arrayId="$(basename "${arrayVcf[0]}" .FINAL.vcf)"
 			fi
 		else
@@ -242,7 +242,7 @@ else
 			continue
 		fi
 		host_prm=$(hostname -s)
-			
+		# shellcheck disable=SC2029	
 		ssh "${HOSTNAME_TMP}" "echo -e \"data1Id\tdata2Id\tlocation1\tlocation2\n${arrayId}\t${ngsVcfId}\t${host_prm}:${arrayVcf[0]}\t${host_prm}:${ngsVcf[0]}\" > \"/groups/${GROUP}/${TMP_LFS}/concordance/samplesheets/${samplesheetName}.sampleId.txt\""
 		log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "samplesheet created on ${HOSTNAME_TMP}: /groups/${GROUP}/${TMP_LFS}/concordance/samplesheets/${samplesheetName}.sampleId.txt"
 		

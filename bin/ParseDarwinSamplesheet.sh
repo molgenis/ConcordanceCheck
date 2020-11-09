@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# executed by the umcg-gd-ateambot, part of the NGS_Automated.
+# executed by the umcg-gd-dm, part of the ConcordanceCheck.
 
 
 if [[ "${BASH_VERSINFO[0]}" -lt 4 ]]
@@ -77,6 +77,18 @@ EOH
 	exit 0
 }
 
+array_contains () {
+    local array="$1[@]"
+    local seeking=$2
+    local in=1
+    for element in "${!array-}"; do
+        if [[ "$element" == "$seeking" ]]; then
+            in=0
+            break
+        fi
+    done
+    return $in
+}
 
 #
 ##
@@ -139,6 +151,7 @@ declare -a configFiles=(
 	"${HOME}/molgenis.cfg"
 )
 
+
 for configFile in "${configFiles[@]}"
 do
 	if [[ -f "${configFile}" && -r "${configFile}" ]]
@@ -168,94 +181,76 @@ then
 	log4Bash 'FATAL' "${LINENO}" "${FUNCNAME:-main}" '1' "This script must be executed by user ${ATEAMBOTUSER}, but you are ${ROLE_USER} (${REAL_USER})."
 fi
 
-
-module load "${htsLibVersion}"
-module load "${bedToolsVersion}"
-module list
-
-concordanceDir="/groups/${NGSGROUP}/${TMP_LFS}/concordance/"
-ngsVcfDirPRM="/groups/${NGSGROUP}/prm0*/concordance/ngs/"
-arrayVcfDirPRM="/groups/${ARRAYGROUP}/${PRM_LFS}/concordance/array/"
-
 # shellcheck disable=SC2029
-for vcfFile in $(ssh "${HOSTNAME_PRM}" "find ${ngsVcfDirPRM} \( -type f -o -type l \) -name '*final.vcf.gz'")
-do
+## ervanuit gaande dat de filename samplename.txt heet, 
+#kolom 1: ook de samplename is 
+#kolom 2: projectNaam NGS 
+#kolom 3: DNA nummer NGS
+#kolom 4: projectnaam array
+#kolom 5: DNA nummer array
 
-	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "processing ngs-vcf ${vcfFile}"
-	ngsFolderPrm="$(dirname "${vcfFile}")"
-	ngsVcfId=$(basename "${vcfFile}" ".final.vcf.gz")
-	# shellcheck disable=SC2029
-	if ssh "${HOSTNAME_PRM}" "zcat \"${vcfFile}\" | grep '##FastQ_Barcode='"
-	then
-		# shellcheck disable=SC2029
-		ngsBarcodeTmp=$(ssh "${HOSTNAME_PRM}" "zcat \"${vcfFile}\" | grep '##FastQ_Barcode='")
-		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "ngsBarcodeTmp=${ngsBarcodeTmp}"
+# 
 
-		ngsBarcode=$(echo "${ngsBarcodeTmp}" | awk 'BEGIN {FS="="}{print "_"$2}')
-		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "ngsBarcode=${ngsBarcode}"
-	else
-		ngsBarcode=""
-	fi
+sampleSheetsDarwin=($(find /groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/ -maxdepth 1 -type f -name '*.csv'))
+if [[ "${#sampleSheetsDarwin[@]:-0}" -eq '0' ]]
+then
+	log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "No sample sheets found @ /groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/: There is nothing to do."
+	trap - EXIT
+	exit 0
+else
+	for darwinSamplesheet in "${sampleSheetsDarwin[@]}"
+	do
+		samplesheetName="$(basename "${darwinSamplesheet}" ".csv")"
+		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Processing sample sheet: ${darwinSamplesheet} ..."
+		projectNGS=$(awk '{print $2}' ${darwinSamplesheet})
+		dnaNGS=$(awk '{print $3}' ${darwinSamplesheet})
+		projectArray=$(awk '{print $4}' ${darwinSamplesheet})
+		dnaArray=$(awk '{print $5}' ${darwinSamplesheet})
+		ngsVcf=()
+		arrayVcf=()
+		
+		ngsPath=("/groups/${NGSGROUP}/prm0"*"/projects/${projectNGS}/run01/results/variants/")
+		if [ -e "${ngsPath[0]}" ]
+		then
+			ngsVcf=($(find "/groups/${NGSGROUP}/prm0"*"/projects/${projectNGS}/run01/results/variants/" -maxdepth 1 -name "*${dnaNGS}*.vcf.gz"))
+			if [[ "${#ngsVcf[@]:-0}" -eq '0' ]]
+			then
+				log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "/groups/${GROUP}/prm0*/projects/${projectNGS}/run*/results/variants/*${dnaNGS}*.vcf.gz NOT FOUND! skipped"
+			else
+				log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Found back NGS ${ngsVcf}"
+				ngsVcfId=$(basename "${ngsVcf[0]}" ".final.vcf.gz")
+			fi
+		else
+			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The NGS project folder cannot be found: /groups/${NGSGROUP}/prm0*/projects/${projectNGS}/run01/results/variants/"
+			continue
+		fi
+		
+		arrayPath=("/groups/${ARRAYGROUP}/prm0"*"/projects/${projectArray}/run01/results/vcf/")
+		if [ -e "${arrayPath[0]}" ]
+		then
+			arrayVcf=($(find "/groups/${ARRAYGROUP}/prm0"*"/projects/${projectArray}/run01/results/vcf" -maxdepth 1  -name "${dnaArray}*.vcf"))
 
-	ngsInfo=$(echo "${ngsVcfId}" | awk 'BEGIN {FS="_"}{OFS="_"}{print $3,$4,$5}')
-	ngsInfoList="${ngsInfo}${ngsBarcode}"
-	dnaNo=$(echo "${ngsVcfId}" | awk 'BEGIN {FS="_"}{print substr($3,4)}')
+			if [[ "${#arrayVcf[@]:-0}" -eq '0' ]]
+			then
+				log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "/groups/${ARRAYGROUP}/prm0*/projects/${projectArray}/run*/results/vcf/${dnaArray}*.vcf NOT FOUND! skipped"
+			else
+				log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Found back Array: ${arrayVcf}"
+				arrayId="$(basename "${arrayVcf[0]}" .FINAL.vcf)"
+			fi
+		else
+			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The ARRAY project folder cannot be found: /groups/${ARRAYGROUP}/prm0*/projects/${projectArray}/run01/results/"
+			continue
+		fi
+		host_prm=$(hostname -s)
+			
+		ssh "${HOSTNAME_TMP}" "echo -e \"data1Id\tdata2Id\tlocation1\tlocation2\n${arrayId}\t${ngsVcfId}\t${host_prm}:${arrayVcf[0]}\t${host_prm}:${ngsVcf[0]}\" > \"/groups/${GROUP}/${TMP_LFS}/concordance/samplesheets/${samplesheetName}.sampleId.txt\""
+		log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "samplesheet created on ${HOSTNAME_TMP}: /groups/${GROUP}/${TMP_LFS}/concordance/samplesheets/${samplesheetName}.sampleId.txt"
+		
+		mv "${darwinSamplesheet}" "/groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/archive/"
+		log4Bash 'TRACE' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "moved ${darwinSamplesheet} to /groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/archive/"
 
-	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "info from ngs.vcf: ${ngsInfoList}"
-	# shellcheck disable=SC2029
-	checkArrayVcf=$(ssh "${HOSTNAME_PRM}" "find \"${arrayVcfDirPRM}\" \( -type f -o -type l \) -name '*DNA-${dnaNo}_*.FINAL.vcf' ")
-
-	copyArrayFile="false"
-	cluster=""
-	if [[ -z "${checkArrayVcf}" ]]
-	then
-	##
-	#### Make part that is also looking on the ISILON storage cluster
-	##
-		#for otherPRM in ${ARRAY_OTHER_PRM_LFS_ISILON[@]}
-		#do
-		#	checkArrayVcf=$(ssh ${HOSTNAMEPRM_ISOLON} "find /groups/${ARRAYGROUP}/${otherPRM}/concordance/array/ -type f -o -type l -iname DNA-${dnaNo}_*.FINAL.vcf")
-		#
-		#done
-		#if [[ -z "${checkArrayVcf}" ]]
-		#then
-		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "there is not (yet) an array vcf file present for ${ngsVcfId}"
-		continue
-		#else
-			#copyArrayFile="true"
-		#fi
-	else
-		copyArrayFile="true"
-		cluster="${HOSTNAME_PRM}"
-	fi
-	
-	if [ "${copyArrayFile}" == "true" ]
-	then
-		#rsync --copy-links ${HOSTNAME_PRM}:${arrayVcfDirPRM}/DNA-${dnaNo}_*.FINAL.vcf "${concordanceDir}/array/"
-		echo "cluster: ${cluster}"
-		arrayFile=$(ssh "${cluster}" "ls -1 ${arrayVcfDirPRM}/DNA-${dnaNo}_*.FINAL.vcf")
-		echo "--------- ${arrayFile}"
-		arrayId="$(basename "${arrayFile}" .FINAL.vcf)"
-		arrayInfoList=$(echo "${arrayId}" | awk 'BEGIN {FS="_"}{OFS="_"}{print $1,$2,$3,$5,$6}')
-		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "processing array vcf ${arrayFile}"
-		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "info from array.vcf: ${arrayInfoList}"
-	fi
-	
-	if [ -f "${concordanceDir}/logs/${arrayInfoList}_${ngsInfoList}.ConcordanceCheck.finished" ]
-	then
-		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "the concordance between ${arrayInfoList} ${ngsInfoList} is being calculated"
-		continue
-	elif [ -f "${concordanceDir}/logs/${arrayInfoList}_${ngsInfo}.ConcordanceMakeSamplesheet.finished" ]
-	then
-		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "the samplesheet is already processed between ${arrayInfoList} ${ngsInfo}"
-		continue
-	else
-		echo -e "data1Id\tdata2Id\tlocation1\tlocation2\n${arrayId}\t${ngsVcfId}\t${HOSTNAME_PRM}:${arrayVcfDirPRM}/${arrayId}.FINAL.vcf\t${HOSTNAME_PRM}:${ngsFolderPrm}/${ngsVcfId}.final.vcf.gz" > "${concordanceDir}/samplesheets/${arrayInfoList}_${ngsInfoList}.sampleId.txt"
-		touch "${concordanceDir}/logs/${arrayInfoList}_${ngsInfo}.ConcordanceMakeSamplesheet.finished"
-	fi 
-
-done
-
+	done
+fi
 trap - EXIT
 exit 0
 

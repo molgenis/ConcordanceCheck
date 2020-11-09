@@ -191,7 +191,7 @@ fi
 
 # 
 
-mapfile -t sampleSheetsDarwin < <(find /groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/ -maxdepth 1 -type f -name '*.csv')
+mapfile -t sampleSheetsDarwin < <(find "/groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/" -maxdepth 1 -type f -name '*.csv')
 if [[ "${#sampleSheetsDarwin[@]:-0}" -eq '0' ]]
 then
 	log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "No sample sheets found @ /groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/: There is nothing to do."
@@ -209,10 +209,10 @@ else
 		ngsVcf=()
 		arrayVcf=()
 		# shellcheck disable=SC2207
-		ngsPath=($("/groups/${NGSGROUP}/prm0"*"/projects/${projectNGS}/run01/results/variants/"))
+		ngsPath=("/groups/${NGSGROUP}/prm0"*"/projects/${projectNGS}/run01/results/variants/")
 		if [ -e "${ngsPath[0]}" ]
 		then
-			mapfilengsVcf=($(find "/groups/${NGSGROUP}/prm0"*"/projects/${projectNGS}/run01/results/variants/" -maxdepth 1 -name "*${dnaNGS}*.vcf.gz"))
+			mapfile -t ngsVcf < <(find "/groups/${NGSGROUP}/prm0"*"/projects/${projectNGS}/run01/results/variants/" -maxdepth 1 -name "*${dnaNGS}*.vcf.gz")
 			if [[ "${#ngsVcf[@]:-0}" -eq '0' ]]
 			then
 				log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "/groups/${GROUP}/prm0*/projects/${projectNGS}/run*/results/variants/*${dnaNGS}*.vcf.gz NOT FOUND! skipped"
@@ -225,10 +225,10 @@ else
 			continue
 		fi
 		# shellcheck disable=SC2207
-		arrayPath=($("/groups/${ARRAYGROUP}/prm0"*"/projects/${projectArray}/run01/results/vcf/"))
+		arrayPath=("/groups/${ARRAYGROUP}/prm0"*"/projects/${projectArray}/run01/results/vcf/")
 		if [ -e "${arrayPath[0]}" ]
 		then
-			arrayVcf=($(find "/groups/${ARRAYGROUP}/prm0"*"/projects/${projectArray}/run01/results/vcf" -maxdepth 1  -name "${dnaArray}*.vcf"))
+			mapfile -t arrayVcf < <(find "/groups/${ARRAYGROUP}/prm0"*"/projects/${projectArray}/run01/results/vcf" -maxdepth 1  -name "${dnaArray}*.vcf")
 
 			if [[ "${#arrayVcf[@]:-0}" -eq '0' ]]
 			then

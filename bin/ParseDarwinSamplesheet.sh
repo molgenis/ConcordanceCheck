@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# executed by the umcg-gd-dm, part of the ConcordanceCheck.
+# executed by the umcg-gd-ateambot, part of the ConcordanceCheck.
 
 
 if [[ "${BASH_VERSINFO[0]}" -lt 4 ]]
@@ -151,7 +151,6 @@ declare -a configFiles=(
 	"${HOME}/molgenis.cfg"
 )
 
-
 for configFile in "${configFiles[@]}"
 do
 	if [[ -f "${configFile}" && -r "${configFile}" ]]
@@ -188,8 +187,6 @@ fi
 #kolom 3: DNA nummer NGS
 #kolom 4: projectnaam array
 #kolom 5: DNA nummer array
-
-# 
 
 mapfile -t sampleSheetsDarwin < <(find "/groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/" -maxdepth 1 -type f -name '*.csv')
 if [[ "${#sampleSheetsDarwin[@]:-0}" -eq '0' ]]

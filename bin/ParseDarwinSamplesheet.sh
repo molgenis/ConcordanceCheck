@@ -213,6 +213,7 @@ else
 			if [[ "${#ngsVcf[@]:-0}" -eq '0' ]]
 			then
 				log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "/groups/${GROUP}/*prm0*/projects/${projectNGS}*/run*/results/variants/*${dnaNGS}*.vcf.gz NOT FOUND! skipped"
+				continue
 			else
 				log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Found back NGS ${ngsVcf[0]}"
 				ngsVcfId=$(basename "${ngsVcf[0]}" ".final.vcf.gz")

@@ -197,8 +197,8 @@ then
 else
 	for darwinSamplesheet in "${sampleSheetsDarwin[@]}"
 	do
-		# shellcheck disable=SC2002
-		cat "${darwinSamplesheet}" | sed 's/\r/\n/g' | sed "/^[\s,]*$/d" > "${darwinSamplesheet}.converted"
+		
+		< "${darwinSamplesheet}" sed 's/\r/\n/g' | sed "/^[\s,]*$/d" > "${darwinSamplesheet}.converted"
 		mv "${darwinSamplesheet}"{.converted,}
 		samplesheetName="$(basename "${darwinSamplesheet}" ".csv")"
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Processing sample sheet: ${darwinSamplesheet} ..."

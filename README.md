@@ -59,8 +59,8 @@ See separate README_v1.md for details on the (deprecated) version
                                                     v <<<< 2: ConcordanceCheck.sh 
                                                     v
    ⎛¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯⎞
-   ⎜ LFS  ⎜ Copies the nsg VCF and the array VCF file to tmp*.                                       ⎜
-   ⎜ tmp* ⎜ Calculates concordance between the nsg and the array VCF files.                          ⎜
+   ⎜ LFS  ⎜ Copies the ngs VCF and the array VCF file to tmp*.                                       ⎜
+   ⎜ tmp* ⎜ Calculates concordance between the ngs and the array VCF files.                          ⎜
    ⎝_________________________________________________________________________________________________⎠
                                                     v
                                                     v

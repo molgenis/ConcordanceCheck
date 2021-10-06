@@ -40,27 +40,30 @@ See separate README_v1.md for details on the (deprecated) version
 #### Data flow
 
 ```
-
-
+      ⎛¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯⎞       ⎛¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯⎞
+      ⎜ LFS  ⎜ The NGS_DNA pipeline is finished  ⎜>> + >>⎜ LFS  ⎜ The GAP pipeline is finished         ⎜ 
+      ⎝__________________________________________⎠       ⎝_____________________________________________⎠
+                                                    v
+                                                    v  
+                                                    v
    ⎛¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯⎞
-   ⎜ LFS  ⎜ Looks on prm0*. Starts from the ngs VCF file, looks if there is an array VCF file with the sample DNAno.  ⎜ 
-   ⎜ tmp* ⎜ If there is a match, a small samplesheet is generated on tmp0* with both file names                       ⎜
-   ⎜      ⎜ and the location of the files on prm0*                                                                    ⎜
+   ⎜ LFS dat0*  ⎜ jobfile is put on dat06 in the /groups/umcg-gd/dat06/ConcordanceCheckSamplesheet folder                   ⎜ 
    ⎝__________________________________________________________________________________________________________________⎠
-               v          ^       v
-               v          ^       v <<<< 1: ConcordanceMakeSamplesheet.sh
-               v          ^       v                                                      
-               v    ⎛¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯⎞       ⎛¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯⎞
-               v    ⎜ LFS  ⎜ The NGS_DNA pipeline is finished  ⎜>> + >>⎜ LFS  ⎜ The GAP pipeline is finished         ⎜ 
-               v    ⎜ prm* ⎜ the ngs VCF files are ready.      ⎜       ⎜ prm* ⎜ the array VCF files are ready.       ⎜
-               v    ⎝__________________________________________⎠       ⎝_____________________________________________⎠
-               v                                                                           
+                                                    v
+                                                    v <<<< 1: ParseDarwinSamplesheet.sh
+                                                    v
+   ⎛¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯⎞
+   ⎜ LFS prm0*  ⎜ Script is executed by ateambot user, creating a samplesheet on TMP on the diagnostic cluster              ⎜
+   ⎝__________________________________________________________________________________________________________________⎠
+                                                    v
+                                                    v <<<< 2: ConcordanceCheck.sh 
+                                                    v
    ⎛¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯⎞
-   ⎜ LFS  ⎜ Copies the nsg VCF and the array VCF file to tmp*.                                       ⎜<<<< 2: ConcordanceCheck.sh 
-   ⎜ tmp* ⎜ Calculates concordance between the nsg and the array VCF files.                          ⎜
+   ⎜ LFS  ⎜ Copies the ngs VCF and the array VCF file to tmp*.                                       ⎜
+   ⎜ tmp* ⎜ Calculates concordance between the ngs and the array VCF files.                          ⎜
    ⎝_________________________________________________________________________________________________⎠
-               v
-               v
+                                                    v
+                                                    v
    ⎛¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯⎞
    ⎜ LFS  ⎜ Concordance check output is copied to prm0*.                                      ⎜ LFS   ⎜
    ⎜ tmp* ⎜ A file containing the location of the Concordance check output is stored on dat0* ⎜ prm0* ⎜
@@ -75,9 +78,9 @@ See separate README_v1.md for details on the (deprecated) version
 ```
 flow chaperone (prm06) --> leucine-zipper (tmp06) --> chaperone (prm06)
 
-#### leucine-zipper
+#### chaperone
 ###### umcg-gd-ateambot 
-module load ConcordanceCheck/${version} ; ConcordanceMakeSamplesheet.sh -g umcg-gd -a umcg-gap
+module load ConcordanceCheck/${version} ; ParseDarwinSamplesheet.sh -g umcg-gd -a umcg-gap
 
 #### leucine-zipper
 ###### umcg-gd-ateambot 
@@ -102,7 +105,7 @@ State is either ```started```, ```failed``` or ```finished```.
 ```
 ## PROCESSING ##
 
-ConcordanceMakeSamplesheet.sh -g NGSGROUP -a ARRAYGROUP => 
+ParseDarwinSamplesheet.sh -g NGSGROUP -a ARRAYGROUP => 
 
 
 ConcordanceCheck.sh -g GROUP => ${cluster}:${TMP_ROOT_DIR}/logs/${project}/${run}.ConcordanceCheck.started
@@ -150,7 +153,7 @@ The cleanup script runs once a day, it will clean up old data:
 
 |Script                        |User              |Running on site/server     |
 |------------------------------|------------------|---------------------------|
-|1. ConcordanceMAkeSamplesheet |${group}-ateambot |HPC Cluster with tmp mount |
+|1. ParseDarwinSamplesheet     |${group}-ateambot |HPC Cluster with tmp mount |
 |2. ConcordanceCheck           |${group}-ateambot |HPC Cluster with tmp mount |
 |3. copyConcordanceCheckData   |${group}-dm       |HPC Cluster with prm mount |
 |4. notifications              |${group}-ateambot |HPC Cluster with tmp mount |

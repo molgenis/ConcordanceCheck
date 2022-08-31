@@ -168,7 +168,7 @@ do
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' \
 	"check ${ConcordanceID}, ngsId:${ngsId} and arrayId:${arrayId} ngsDnaNo:${ngsDnaNo}, arrayDnaNo:${arrayDnaNo}"
 	
-	if ssh -n "${ATEAMBOTUSER}@${HOSTNAME_PRM}" test -e "/groups/${group}/${PRM_LFS}/concordance/logs/${ConcordanceID}.copyConcordanceCheckData.finished"
+	if ls "${concordanceDir}/logs/${ConcordanceID}"*".ConcordanceCheck.finished" 2>/dev/null
 	then
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' \
 			"rm -rf ${concordanceDir}/jobs/${ConcordanceID}.*/ 

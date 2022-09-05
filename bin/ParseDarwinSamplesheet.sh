@@ -189,7 +189,7 @@ fi
 #kolom 5: DNA nummer array
 
 mapfile -t sampleSheetsDarwin < <(find "/groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/" -maxdepth 1 -type f -name '*.csv')
-if [[ "${#sampleSheetsDarwin[@]:-0}" -eq '0' ]]
+if [[ "${#sampleSheetsDarwin[@]}" -eq '0' ]]
 then
 	log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "No sample sheets found @ /groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/: There is nothing to do."
 	trap - EXIT
@@ -213,7 +213,7 @@ else
 		if [ -e "${ngsPath[0]}" ]
 		then
 			mapfile -t ngsVcf < <(find "/groups/${NGSGROUP}/prm0"*"/projects/"*"${projectNGS}"*"/run01/results/variants/" -maxdepth 1 -name "*${dnaNGS}*.vcf.gz")
-			if [[ "${#ngsVcf[@]:-0}" -eq '0' ]]
+			if [[ "${#ngsVcf[@]}" -eq '0' ]]
 			then
 				log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "/groups/${GROUP}/*prm0*/projects/${projectNGS}*/run*/results/variants/*${dnaNGS}*.vcf.gz NOT FOUND! skipped"
 				continue
@@ -231,7 +231,7 @@ else
 		then
 			mapfile -t arrayVcf < <(find "/groups/${ARRAYGROUP}/prm0"*"/projects/"*"${projectArray}"*"/run01/results/vcf" -maxdepth 1  -name "${dnaArray}*.vcf")
 
-			if [[ "${#arrayVcf[@]:-0}" -eq '0' ]]
+			if [[ "${#arrayVcf[@]}" -eq '0' ]]
 			then
 				log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "/groups/${ARRAYGROUP}/prm0*/projects/*${projectArray}*/run*/results/vcf/${dnaArray}*.vcf NOT FOUND! skipped"
 			else

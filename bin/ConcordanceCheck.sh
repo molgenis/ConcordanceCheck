@@ -183,12 +183,8 @@ do
 		touch "${concordanceDir}/logs/${concordanceCheckId}.ConcordanceCheck.started"
 		arrayId=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $1}')
 		arrayVcf="${arrayId}.FINAL.vcf"
-		arrayFileLocation=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $3}')
-		rsync -av --copy-links "${arrayFileLocation}" "${arrayVcfDir}"
 		ngsId=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $2}')
 		ngsVcf="${ngsId}.final.vcf.gz"
-		ngsFileLocation=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $4}')
-		rsync -av --copy-links "${ngsFileLocation}" "${ngsVcfDir}"
 
 		bedType="$(zcat "${ngsVcfDir}/${ngsVcf}" | grep -m 1 -o -P 'intervals=\[[^\]]*.bed\]' | cut -d [ -f2 | cut -d ] -f1)"
 		bedDir="$(dirname "${bedType}")"

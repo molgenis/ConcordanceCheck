@@ -243,6 +243,11 @@ else
 			continue
 		fi
 		host_prm=$(hostname -s)
+
+		#rsync data to tmp
+		rsync -av "${arrayVcf[0]}" "${HOSTNAME_TMP}:/groups/${GROUP}/${TMP_LFS}/concordance/array/"
+		rsync -av "${ngsVcf[0]}" "${HOSTNAME_TMP}:/groups/${GROUP}/${TMP_LFS}/concordance/ngs/"
+
 		# shellcheck disable=SC2029	
 		ssh "${HOSTNAME_TMP}" "echo -e \"data1Id\tdata2Id\tlocation1\tlocation2\n${arrayId}\t${ngsVcfId}\t${host_prm}:${arrayVcf[0]}\t${host_prm}:${ngsVcf[0]}\" > \"/groups/${GROUP}/${TMP_LFS}/concordance/samplesheets/${samplesheetName}.sampleId.txt\""
 		log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "samplesheet created on ${HOSTNAME_TMP}: /groups/${GROUP}/${TMP_LFS}/concordance/samplesheets/${samplesheetName}.sampleId.txt"

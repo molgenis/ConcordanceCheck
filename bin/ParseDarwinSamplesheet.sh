@@ -46,7 +46,8 @@ function showHelp() {
 	#
 	cat <<EOH
 ======================================================================================================================
-Scripts to make automatically a samplesheet for the concordance check between ngs and array data.
+Scripts to make automatically a samplesheet for the concordance check between ngs and array data and pushes the ngs and 
+array data to the destination machine.
 ngs.vcf should be in /groups/${NGSGROUP}/${PRM_LFS}/concordance/ngs/.
 array.vcf should be in /groups/${ARRAYGROUP}/${PRM_LFS}/concordance/array/.
 

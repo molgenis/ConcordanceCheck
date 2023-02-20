@@ -2,7 +2,7 @@
 set -eu
 
 concordanceDir="/groups/umcg-atd/tmp06/concordance/array-array/"
-
+SAMPLE_ID="pathToSample"
 #
 ##
 ### Needs an index folder with a file to compare with

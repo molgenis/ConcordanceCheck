@@ -17,8 +17,8 @@ SAMPLE_ID="pathToSample"
 echo "creating workfolders : results,tmp,samplesheets,jobs and original in ${concordanceDir}"
 mkdir -p "${concordanceDir}/"{results,tmp,samplesheets,jobs,original}
 
-module load "HTSlib/1.3.2-foss-2015b"
-
+module load HTSlib
+module list
 ## indexVCF to compare all input files with:
 indexVcf="${concordanceDir}/index/${SAMPLE_ID}"
 
@@ -73,9 +73,9 @@ cat << EOH > "${concordanceDir}/jobs/${concordanceCheckId}.sh"
 #SBATCH --get-user-env=60L
 
 set -eu
-	module load "CompareGenotypeCalls/1.8.1-Java-1.8.0_74"
-	module load "BEDTools/2.25.0-foss-2015b"
-
+	module load CompareGenotypeCalls
+	module load BEDTools
+	module list
 	java -XX:ParallelGCThreads=1 -Djava.io.tmpdir="${concordanceDir}/temp/" -Xmx9g -jar \${EBROOTCOMPAREGENOTYPECALLS}/CompareGenotypeCalls.jar \
 	-d1 "${indexVcf}.gz" \
 	-D1 VCF \

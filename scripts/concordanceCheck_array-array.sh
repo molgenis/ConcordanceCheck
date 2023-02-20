@@ -20,7 +20,7 @@ mkdir -p "${concordanceDir}/"{results,tmp,samplesheets,jobs,original}
 module load "HTSlib/1.3.2-foss-2015b"
 
 ## indexVCF to compare all input files with:
-indexVcf="${concordanceDir}/index/DNA-159082_OND-674938_SPS-1993617_Male_207128950035_R02C01.FINAL.vcf"
+indexVcf="${concordanceDir}/index/${SAMPLE_ID}"
 
 ## grep first 100K lines for comparison
 head -100000 "${indexVcf}" > "${indexVcf}.header100000"

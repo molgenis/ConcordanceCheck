@@ -2,6 +2,7 @@
 
 Automation using Bash scripts and Cron jobs, inorder to automate the concordance check calculations. 
 
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/molgenis/ConcordanceCheck/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/molgenis/ConcordanceCheck/tree/master)
 
 #### Code style
 

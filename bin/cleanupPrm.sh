@@ -168,7 +168,7 @@ done
 while IFS= read -r i
 do
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "${i}"
-	if [ "${dryrun}" == "no" ]
+	if [[ "${dryrun}" == "no" ]]
 	then
 		rm -rf "${PRM_ROOT_DIR}/concordance/logs/${i}"
 	fi
@@ -181,7 +181,7 @@ log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' 'cleanup logs directory fin
 while IFS= read -r arraylink
 do
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "${arraylink}"
-	if [ "${dryrun}" == "no" ]
+	if [[ "${dryrun}" == "no" ]]
 	then
 		rm -rf "/groups/${arraygroup}/${PRM_LFS}/concordance/array/${arraylink}"
 	fi

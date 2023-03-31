@@ -48,7 +48,7 @@ function contains() {
 	local n=$#
 	local value=${!n}
 	for ((i=1;i < $#;i++)) {
-		if [ "${!i}" == "${value}" ]
+		if [[ "${!i}" == "${value}" ]]
 		then
 			echo 'y'
 			return 0

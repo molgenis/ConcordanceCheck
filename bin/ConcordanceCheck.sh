@@ -177,7 +177,7 @@ while IFS= read -r sampleSheet
 do
 	echo "______________________________________________________________________________" ## remove when script is finished
 	concordanceCheckId=$(basename "${sampleSheet}" .sampleId.txt)
-	if [ ! -f "${concordanceDir}/jobs/${concordanceCheckId}.sh" ]
+	if [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}.sh" ]]
 	then
 
 		touch "${concordanceDir}/logs/${concordanceCheckId}.ConcordanceCheck.started"

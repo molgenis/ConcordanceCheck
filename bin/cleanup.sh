@@ -178,7 +178,7 @@ do
 			rm -rf ${concordanceDir}/array/${arrayId}.FINAL.vcf
 			rm -rf ${concordanceDir}/ngs/${ngsId}.final.vcf.gz"
 
-		if [ "${dryrun}" == "no" ]
+		if [[ "${dryrun}" == "no" ]]
 		then
 			rm -rf "${concordanceDir}/jobs/${ConcordanceID}.*"
 			rm -rf "${concordanceDir}/tmp/${ConcordanceID}/"

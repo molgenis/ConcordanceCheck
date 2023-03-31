@@ -211,7 +211,7 @@ else
 		arrayVcf=()
 		# shellcheck disable=SC2207
 		ngsPath=("/groups/${NGSGROUP}/prm0"*"/projects/${projectNGS}"*"/run01/results/variants/")
-		if [ -e "${ngsPath[0]}" ]
+		if [[ -e "${ngsPath[0]}" ]]
 		then
 			mapfile -t ngsVcf < <(find "/groups/${NGSGROUP}/prm0"*"/projects/"*"${projectNGS}"*"/run01/results/variants/" -maxdepth 1 -name "*${dnaNGS}*.vcf.gz")
 			if [[ "${#ngsVcf[@]}" -eq '0' ]]
@@ -228,7 +228,7 @@ else
 		fi
 		# shellcheck disable=SC2207
 		arrayPath=("/groups/${ARRAYGROUP}/prm0"*"/projects/"*"${projectArray}"*"/run01/results/vcf/")
-		if [ -e "${arrayPath[0]}" ]
+		if [[ -e "${arrayPath[0]}" ]]
 		then
 			mapfile -t arrayVcf < <(find "/groups/${ARRAYGROUP}/prm0"*"/projects/"*"${projectArray}"*"/run01/results/vcf" -maxdepth 1  -name "${dnaArray}*.vcf")
 

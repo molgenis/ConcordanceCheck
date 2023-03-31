@@ -1,9 +1,11 @@
 #!/bin/bash
 
+MYDIR="$(cd -P "$(dirname "${0}")" && pwd)"
+
 echo '#####################################################################################'
 echo '  Bash code must be indented with TABs. Checking for lines indented with spaces ... '
 echo '#####################################################################################'
-grep -n '^[[:space:]]* [[:space:]]*' "${WORKSPACE:-../}"/{bin,lib}/*.*sh
+grep -n '^[[:space:]]* [[:space:]]*' "${MYDIR}"/../{bin,lib}/*.*sh
 grep_exit_status="${?}"
 if [[ "${grep_exit_status}" -eq 0 ]]; then
 	echo '#####################################################################################'

@@ -212,7 +212,7 @@ readarray -t sampleSheetsFromSourceServer< <(ssh "${DATA_MANAGER}@${HOSTNAME_TMP
 
 mkdir -p "/groups/${group}/${DAT_LFS}/ConcordanceCheckOutput/"
 
-if [[ "${#sampleSheetsFromSourceServer[@]:-0}" -eq '0' ]]
+if [[ "${#sampleSheetsFromSourceServer[@]}" -eq '0' ]]
 then
 	log4Bash 'WARN' "${LINENO}" "${FUNCNAME:-main}" '0' "No sample sheets found at ${DATA_MANAGER}@${HOSTNAME_TMP}:${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/*.sampleId.txt."
 else

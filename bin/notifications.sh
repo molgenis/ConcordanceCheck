@@ -97,7 +97,7 @@ function notification() {
 	for _lfs_root_dir in "${_lfs_root_dirs[@]}"
 	do
 		readarray -t _project_state_files < <(find "${_lfs_root_dir}/concordance/logs/" -maxdepth 1 -mindepth 1 -type f -name "*.${_phase}.${_state}")
-		if [[ "${#_project_state_files[@]:-0}" -eq '0' ]]
+		if [[ "${#_project_state_files[@]}" -eq '0' ]]
 		then
 			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "project_state_files ${#_project_state_files[@]:-0}"
 			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "No *.${_phase}.${_state} files present in ${_lfs_root_dir}/concordance/logs/"
@@ -261,7 +261,7 @@ done
 #
 # Notify for specific colon separated combinations of "phase:state".
 #
-if [[ -n "${NOTIFY_FOR_PHASE_WITH_STATE[0]:-}" && "${#NOTIFY_FOR_PHASE_WITH_STATE[@]:-0}" -ge 1 ]]; then
+if [[ -n "${NOTIFY_FOR_PHASE_WITH_STATE[0]:-}" && "${#NOTIFY_FOR_PHASE_WITH_STATE[@]}" -ge 1 ]]; then
 	for phase_with_state in "${NOTIFY_FOR_PHASE_WITH_STATE[@]}"
 	do
 		notification "${phase_with_state}"

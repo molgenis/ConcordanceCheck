@@ -230,7 +230,6 @@ set -eu
 	tabix -p vcf "${concordanceDir}/tmp/${concordanceCheckId}/${arrayId}.FINAL.ExonFiltered.vcf.gz"
 
 	java -XX:ParallelGCThreads=1 -Djava.io.tmpdir="${concordanceDir}/temp/" -Xmx9g -jar ${EBROOTCOMPAREGENOTYPECALLS}/CompareGenotypeCalls.jar \\
-		
 	-D1 VCF \\
 	-d2 "${concordanceDir}/tmp/${concordanceCheckId}/${ngsId}.FINAL.vcf.gz" \\
 	-D2 VCF \\

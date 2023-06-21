@@ -260,8 +260,10 @@ EOH
 	
 	if [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}.sh.started" ]] && [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}.sh.finished" ]]
 	then
-		sbatch "${concordanceDir}/jobs/${concordanceCheckId}.sh"
-		touch "${concordanceDir}/jobs/${concordanceCheckId}.sh.started"
+		cd "${concordanceDir}/jobs/"
+		sbatch "${concordanceCheckId}.sh"
+		touch "${concordanceCheckId}.sh.started"
+		cd -
 	fi
 done < <(find "${concordanceDir}/samplesheets/" -maxdepth 1 -type f -iname "*sampleId.txt") 
 trap - EXIT

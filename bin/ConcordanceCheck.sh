@@ -260,6 +260,7 @@ EOH
 	
 	if [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}.sh.started" ]] && [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}.sh.finished" ]]
 	then
+		cd "${concordanceDir}/jobs/"
 		sbatch "${concordanceCheckId}.sh"
 		touch "${concordanceCheckId}.sh.started"
 		cd -

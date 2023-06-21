@@ -230,6 +230,7 @@ set -eu
 	tabix -p vcf "${concordanceDir}/tmp/${concordanceCheckId}/${arrayId}.FINAL.ExonFiltered.vcf.gz"
 
 	java -XX:ParallelGCThreads=1 -Djava.io.tmpdir="${concordanceDir}/temp/" -Xmx9g -jar ${EBROOTCOMPAREGENOTYPECALLS}/CompareGenotypeCalls.jar \\
+	-d1 "${concordanceDir}/tmp/${concordanceCheckId}/${arrayId}.FINAL.ExonFiltered.vcf.gz" \\
 	-D1 VCF \\
 	-d2 "${concordanceDir}/tmp/${concordanceCheckId}/${ngsId}.FINAL.vcf.gz" \\
 	-D2 VCF \\
@@ -259,12 +260,10 @@ EOH
 	
 	if [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}.sh.started" ]] && [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}.sh.finished" ]]
 	then
-		cd "${concordanceDir}/jobs/"
 		sbatch "${concordanceCheckId}.sh"
 		touch "${concordanceCheckId}.sh.started"
 		cd -
 	fi
-
 done < <(find "${concordanceDir}/samplesheets/" -maxdepth 1 -type f -iname "*sampleId.txt") 
 trap - EXIT
 exit 0

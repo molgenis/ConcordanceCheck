@@ -239,8 +239,6 @@ set -eu
 	-o "${concordanceDir}/tmp/${concordanceCheckId}" \\
 	-sva
 
-	perl -pi -e "s|${arrayId}|${concordanceCheckId}|" "${concordanceDir}/tmp/${concordanceCheckId}.sample"
-
 	echo "moving ${concordanceDir}/tmp/${concordanceCheckId}.sample to ${concordanceDir}/results/" 
 	mv "${concordanceDir}/tmp/${concordanceCheckId}.sample" "${concordanceDir}/results/"
 	echo "moving ${concordanceDir}/tmp/${concordanceCheckId}.variants to ${concordanceDir}/results/"

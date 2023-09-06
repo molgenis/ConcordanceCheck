@@ -235,6 +235,7 @@ else
 			if [[ "${#arrayVcf[@]}" -eq '0' ]]
 			then
 				log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "/groups/${ARRAYGROUP}/prm0*/projects/*${projectArray}*/run*/results/vcf/${dnaArray}*.vcf NOT FOUND! skipped"
+				continue
 			else
 				log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Found back Array: ${arrayVcf[0]}"
 				arrayId="$(basename "${arrayVcf[0]}" .FINAL.vcf)"

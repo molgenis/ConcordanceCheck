@@ -184,7 +184,7 @@ do
 		arrayId=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $1}')
 		arrayVcf="${arrayId}.FINAL.vcf"
 		ngsId=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $2}')
-		ngsVcf="${ngsId}.final.vcf.gz"
+		ngsVcf="$(basename "$(ls "${ngsVcfDir}/${ngsId}"*)")"
 
 		bedType="$(zcat "${ngsVcfDir}/${ngsVcf}" | grep -m 1 -o -P 'intervals=\[[^\]]*.bed\]' | cut -d [ -f2 | cut -d ] -f1)"
 		bedDir="$(dirname "${bedType}")"

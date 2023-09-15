@@ -213,7 +213,7 @@ else
 		ngsPath=("/groups/${NGSGROUP}/prm0"*"/projects/${projectNGS}"*"/run01/results/variants/")
 		if [[ -e "${ngsPath[0]}" ]]
 		then
-			mapfile -t ngsVcf < <(find "/groups/${NGSGROUP}/prm0"*"/projects/"*"${projectNGS}"*"/run01/results/variants/" -maxdepth 1 -name "*${dnaNGS}*.vcf.gz")
+			mapfile -t ngsVcf < <(find "/groups/${NGSGROUP}/prm0"*"/projects/"*"${projectNGS}"*"/run01/results/variants/" -maxdepth 2 -name "*${dnaNGS}*.vcf.gz" \( -name "*GAVIN*" -o -name "*final*" \))
 			if [[ "${#ngsVcf[@]}" -eq '0' ]]
 			then
 				log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "/groups/${GROUP}/*prm0*/projects/${projectNGS}*/run*/results/variants/*${dnaNGS}*.vcf.gz NOT FOUND! skipped"
@@ -221,6 +221,11 @@ else
 			else
 				log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Found back NGS ${ngsVcf[0]}"
 				ngsVcfId=$(basename "${ngsVcf[0]}" ".final.vcf.gz")
+				ngsVcfId="${ngsVcfId%.GAVIN.rlv.vcf.gz}"
+				if [[ "${projectNGS}" == "GS_"* ]]
+				then
+					ngsVcfId=$(echo "${ngsVcfId}" | awk 'BEGIN{FS="_"}{print $1"_"$2}')
+				fi
 			fi
 		else
 			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The NGS project folder cannot be found: /groups/${NGSGROUP}/prm0*/projects/${projectNGS}*/run01/results/variants/"

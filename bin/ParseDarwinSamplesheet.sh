@@ -221,6 +221,11 @@ else
 			else
 				log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Found back NGS ${ngsVcf[0]}"
 				ngsVcfId=$(basename "${ngsVcf[0]}" ".final.vcf.gz")
+				ngsVcfId="${ngsVcfId%.GAVIN.rlv.vcf.gz}"
+				if [[ "${projectNGS}" == "GS_"* ]]
+				then
+					ngsVcfId=$(echo "${ngsVcfId}" | awk 'BEGIN{FS="_"}{print $1"_"$2}')
+				fi
 			fi
 		else
 			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The NGS project folder cannot be found: /groups/${NGSGROUP}/prm0*/projects/${projectNGS}*/run01/results/variants/"

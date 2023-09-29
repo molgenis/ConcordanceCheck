@@ -212,7 +212,7 @@ else
 		ngsPath=("/groups/${NGSGROUP}/prm0"*"/projects/${projectNGS}"*"/run01/results/variants/")
 		if [[ -e "${ngsPath[0]}" ]]
 		then
-			mapfile -t ngsVcf < <(find "/groups/${NGSGROUP}/prm0"*"/projects/"*"${projectNGS}"*"/run01/results/variants/" -maxdepth 2 \( -name "*GAVIN*" -o -name "*final*" \) -name "*${dnaNGS}*.vcf.gz" )
+			mapfile -t ngsVcf < <(find "/groups/${NGSGROUP}/prm0"*"/projects/"*"${projectNGS}"*"/run01/results/variants/" -maxdepth 2 -name "*${dnaNGS}*.GAVIN.*" -o -name "*${dnaNGS}*.vcf.gz" )
 			if [[ "${#ngsVcf[@]}" -eq '0' ]]
 			then
 				log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "/groups/${GROUP}/*prm0*/projects/${projectNGS}*/run*/results/variants/*${dnaNGS}*.vcf.gz NOT FOUND! skipped"

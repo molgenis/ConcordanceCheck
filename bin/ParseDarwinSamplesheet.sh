@@ -198,10 +198,9 @@ then
 else
 	for darwinSamplesheet in "${sampleSheetsDarwin[@]}"
 	do
-		
 		< "${darwinSamplesheet}" sed 's/\r/\n/g' | sed "/^[\s,]*$/d" > "${darwinSamplesheet}.converted"
-		mv "${darwinSamplesheet}"{.converted,}
-		samplesheetName="$(basename "${darwinSamplesheet}" ".csv")"
+		darwinSamplesheet="${darwinSamplesheet}.converted"
+		samplesheetName="$(basename "${darwinSamplesheet}" ".csv.converted")"
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Processing sample sheet: ${darwinSamplesheet} ..."
 		projectNGS=$(awk '{print $2}' "${darwinSamplesheet}")
 		dnaNGS=$(awk '{print $3}' "${darwinSamplesheet}")
@@ -213,7 +212,7 @@ else
 		ngsPath=("/groups/${NGSGROUP}/prm0"*"/projects/${projectNGS}"*"/run01/results/variants/")
 		if [[ -e "${ngsPath[0]}" ]]
 		then
-			mapfile -t ngsVcf < <(find "/groups/${NGSGROUP}/prm0"*"/projects/"*"${projectNGS}"*"/run01/results/variants/" -maxdepth 2 -name "*${dnaNGS}*.vcf.gz" \( -name "*GAVIN*" -o -name "*final*" \))
+			mapfile -t ngsVcf < <(find "/groups/${NGSGROUP}/prm0"*"/projects/"*"${projectNGS}"*"/run01/results/variants/" -maxdepth 2 \( -name "*GAVIN*" -o -name "*final*" \) -name "*${dnaNGS}*.vcf.gz" )
 			if [[ "${#ngsVcf[@]}" -eq '0' ]]
 			then
 				log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "/groups/${GROUP}/*prm0*/projects/${projectNGS}*/run*/results/variants/*${dnaNGS}*.vcf.gz NOT FOUND! skipped"
@@ -222,6 +221,7 @@ else
 				log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Found back NGS ${ngsVcf[0]}"
 				ngsVcfId=$(basename "${ngsVcf[0]}" ".final.vcf.gz")
 				ngsVcfId="${ngsVcfId%.GAVIN.rlv.vcf.gz}"
+				ngsVcfId="${ngsVcfId%.GAVIN.rlv.vcf}"
 				if [[ "${projectNGS}" == "GS_"* ]]
 				then
 					ngsVcfId=$(echo "${ngsVcfId}" | awk 'BEGIN{FS="_"}{print $1"_"$2}')
@@ -259,9 +259,10 @@ else
 		ssh "${HOSTNAME_TMP}" "echo -e \"data1Id\tdata2Id\tlocation1\tlocation2\n${arrayId}\t${ngsVcfId}\t${host_prm}:${arrayVcf[0]}\t${host_prm}:${ngsVcf[0]}\" > \"/groups/${GROUP}/${TMP_LFS}/concordance/samplesheets/${samplesheetName}.sampleId.txt\""
 		log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "samplesheet created on ${HOSTNAME_TMP}: /groups/${GROUP}/${TMP_LFS}/concordance/samplesheets/${samplesheetName}.sampleId.txt"
 		
-		mv "${darwinSamplesheet}" "/groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/archive/"
-		log4Bash 'TRACE' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "moved ${darwinSamplesheet} to /groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/archive/"
-
+		#copy original darwinSamplesheet to archive and remove the .converted one
+		log4Bash 'TRACE' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "moving ${darwinSamplesheet%.converted} to /groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/archive/ "
+		mv -v "${darwinSamplesheet%.converted}" "/groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/archive/"
+		rm -v "${darwinSamplesheet}"
 	done
 fi
 trap - EXIT

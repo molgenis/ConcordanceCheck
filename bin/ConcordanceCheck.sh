@@ -185,7 +185,7 @@ do
 		arrayVcf="${arrayId}.FINAL.vcf"
 		ngsId=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $2}')
 		ngsVcf="$(basename "$(ls "${ngsVcfDir}/${ngsId}"*)")"
-		getNgsVcfExtension="${ngsVcfDir}/${ngsVcf##*.}"
+		getNgsVcfExtension="${ngsVcf##*.}"
 		if [[ "${getNgsVcfExtension}" != "gz" ]]
 		then
 			echo "vcf file is not gzipped, gzipping now"

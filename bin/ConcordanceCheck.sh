@@ -163,6 +163,7 @@ thereShallBeOnlyOne "${lockFile}"
 log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Successfully got exclusive access to lock file ${lockFile} ..."
 log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Log files will be written to ${TMP_ROOT_DIR}/logs ..."
 
+concordanceCheckVersion=$(module list | grep -o -P 'ConcordanceCheck(.+)')
 module load "${htsLibVersion}"
 module load "${compareGenotypeCallsVersion}"
 module load "${bedToolsVersion}"
@@ -184,7 +185,8 @@ do
 		arrayId=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $1}')
 		arrayVcf="${arrayId}.FINAL.vcf"
 		ngsId=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $2}')
-		ngsVcf="$(basename "$(ls "${ngsVcfDir}/${ngsId}"*)")"
+		ngsVcf=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $4}')
+		ngsVcf="$(basename "${ngsVcf}")"
 		getNgsVcfExtension="${ngsVcf##*.}"
 		if [[ "${getNgsVcfExtension}" != "gz" ]]
 		then
@@ -219,9 +221,9 @@ do
 		
 cat << EOH > "${concordanceDir}/jobs/${concordanceCheckId}.sh"
 #!/bin/bash
-#SBATCH --job-name=Concordance_${arrayId}
-#SBATCH --output=${concordanceDir}/jobs/${arrayId}.out
-#SBATCH --error=${concordanceDir}/jobs/${arrayId}.err
+#SBATCH --job-name=Concordance_${concordanceCheckId}
+#SBATCH --output=${concordanceDir}/jobs/${concordanceCheckId}.out
+#SBATCH --error=${concordanceDir}/jobs/${concordanceCheckId}.err
 #SBATCH --time=00:30:00
 #SBATCH --cpus-per-task 1
 #SBATCH --mem 6gb
@@ -250,7 +252,7 @@ set -eu
 	mv "${concordanceDir}/tmp/${concordanceCheckId}.sample" "${concordanceDir}/results/"
 	echo "moving ${concordanceDir}/tmp/${concordanceCheckId}.variants to ${concordanceDir}/results/"
 	mv "${concordanceDir}/tmp/${concordanceCheckId}.variants" "${concordanceDir}/results/"
-
+	echo ${concordanceCheckVersion} > "${concordanceDir}/results/${concordanceCheckId}.ConcordanceCheckVersion"
 	echo "finished"
 	if [ -e "/groups/${GROUP}/${TMP_LFS}/concordance/logs/${concordanceCheckId}.ConcordanceCheck.started" ]
 	then

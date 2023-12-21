@@ -1,3 +1,0 @@
-data1Id	data2Id	location1	location2	fileType1	fileType2	build1	build2
-RNA001	DNA-001	test/VCF/RNA001.FINAL.vcf	test/VCF/DNA-001.FINAL.vcf.gz	VCF	VCF	b38	b37
-

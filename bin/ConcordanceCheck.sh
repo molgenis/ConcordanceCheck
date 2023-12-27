@@ -107,7 +107,8 @@ do
 			;;
 		*)
 			log4Bash 'FATAL' "${LINENO}" "${FUNCNAME[0]:-main}" '1' "Unhandled option. Try $(basename "${0}") -h for help."
-			;;	esac
+			;;
+	esac
 done
 
 #
@@ -176,11 +177,10 @@ arrayVcfDir="${concordanceDir}/array/"
 
 while IFS= read -r sampleSheet
 do
-	echo "______________________________________________________________________________" ## remove when script is finished
+	log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Processing samplesheet ${sampleSheet} ..."
 	concordanceCheckId=$(basename "${sampleSheet}" .sampleId.txt)
 	if [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}.sh" ]]
 	then
-
 		touch "${concordanceDir}/logs/${concordanceCheckId}.ConcordanceCheck.started"
 		arrayId=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $1}')
 		arrayVcf="${arrayId}.FINAL.vcf"
@@ -190,7 +190,7 @@ do
 		getNgsVcfExtension="${ngsVcf##*.}"
 		if [[ "${getNgsVcfExtension}" != "gz" ]]
 		then
-			echo "vcf file is not gzipped, gzipping now"
+			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "VCF file ${ngsVcf} is not compressed. bgzip-ping now ..."
 			ml HTSlib
 			bgzip "${ngsVcfDir}/${ngsVcf}"
 			ngsVcf="${ngsVcf}.gz"
@@ -198,26 +198,21 @@ do
 		bedType="$(zcat "${ngsVcfDir}/${ngsVcf}" | grep -m 1 -o -P 'intervals=\[[^\]]*.bed\]' | cut -d [ -f2 | cut -d ] -f1)"
 		bedDir="$(dirname "${bedType}")"
 		bedFile="${bedDir}/captured.merged.bed"
-
 		mkdir -p "${concordanceDir}/tmp/${concordanceCheckId}/"
-
-		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Calculating concordance over ${ngsVcf} compared to ${arrayVcf}"
-		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Using ${bedFile} to intersect the array vcf file"
-		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Output file name: ${concordanceCheckId}"
-
-		##remove indel-calls from ngs-vcf
+		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Calculating concordance over ${ngsVcf} compared to ${arrayVcf}."
+		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Using ${bedFile} to intersect the array vcf file."
+		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Output file name: ${concordanceCheckId}."
+		#
+		# Remove InDel calls from NGS VCF.
+		#
 		zcat "${ngsVcfDir}/${ngsVcf}" | grep '^#' > "${concordanceDir}/tmp/${concordanceCheckId}/${ngsId}.FINAL.vcf"
 		zcat "${ngsVcfDir}/${ngsVcf}" | grep -v '^#' | awk '{if (length($4)<2 && length($5)<2 ){print $0}}' >> "${concordanceDir}/tmp/${concordanceCheckId}/${ngsId}.FINAL.vcf"
-
 		bgzip -c "${concordanceDir}/tmp/${concordanceCheckId}/${ngsId}.FINAL.vcf" > "${concordanceDir}/tmp/${concordanceCheckId}/${ngsId}.FINAL.vcf.gz"
 		tabix -p vcf "${concordanceDir}/tmp/${concordanceCheckId}/${ngsId}.FINAL.vcf.gz"
-
-		if bedtools intersect -a "${arrayVcfDir}/${arrayVcf}" -b "${bedFile}" -header  > "${concordanceDir}/tmp/${concordanceCheckId}/${arrayId}.FINAL.ExonFiltered.vcf"
-		then
-			echo ""
-		else
-			'FATAL' "${LINENO}" "${FUNCNAME:-main}" '1' "There is something wrong while running bedtools intersect"
-		fi
+		bedtools intersect -a "${arrayVcfDir}/${arrayVcf}" -b "${bedFile}" -header \
+				> "${concordanceDir}/tmp/${concordanceCheckId}/${arrayId}.FINAL.ExonFiltered.vcf" \
+				2> "${concordanceDir}/logs/${concordanceCheckId}.ConcordanceCheck.started" \
+			|| log4Bash 'FATAL' "${LINENO}" "${FUNCNAME:-main}" "${?}" "Failed to execute 'bedtools intersect' command."
 		
 cat << EOH > "${concordanceDir}/jobs/${concordanceCheckId}.sh"
 #!/bin/bash
@@ -248,20 +243,18 @@ set -eu
 	-o "${concordanceDir}/tmp/${concordanceCheckId}" \\
 	-sva
 
-	echo "moving ${concordanceDir}/tmp/${concordanceCheckId}.sample to ${concordanceDir}/results/" 
-	mv "${concordanceDir}/tmp/${concordanceCheckId}.sample" "${concordanceDir}/results/"
-	echo "moving ${concordanceDir}/tmp/${concordanceCheckId}.variants to ${concordanceDir}/results/"
-	mv "${concordanceDir}/tmp/${concordanceCheckId}.variants" "${concordanceDir}/results/"
-	echo ${concordanceCheckVersion} > "${concordanceDir}/results/${concordanceCheckId}.ConcordanceCheckVersion"
-	echo "finished"
-	if [ -e "/groups/${GROUP}/${TMP_LFS}/concordance/logs/${concordanceCheckId}.ConcordanceCheck.started" ]
+	mv -v "${concordanceDir}/tmp/${concordanceCheckId}.sample" "${concordanceDir}/results/"
+	mv -v "${concordanceDir}/tmp/${concordanceCheckId}.variants" "${concordanceDir}/results/"
+	echo "${concordanceCheckVersion}" > "${concordanceDir}/results/${concordanceCheckId}.ConcordanceCheckVersion"
+	echo "Finished"
+	if [[ -e "/groups/${GROUP}/${TMP_LFS}/concordance/logs/${concordanceCheckId}.ConcordanceCheck.started" ]]
 	then
 		mv "/groups/${GROUP}/${TMP_LFS}/concordance/logs/${concordanceCheckId}.ConcordanceCheck."{started,finished}
 	else
 		touch "/groups/${GROUP}/${TMP_LFS}/concordance/logs/${concordanceCheckId}.ConcordanceCheck.finished"
 	fi
 
-	mv "${concordanceDir}/jobs/${concordanceCheckId}.sh."{started,finished} 
+	mv "${concordanceDir}/jobs/${concordanceCheckId}.sh."{started,finished}
 EOH
 	fi
 	
@@ -272,7 +265,7 @@ EOH
 		touch "${concordanceCheckId}.sh.started"
 		cd -
 	fi
-done < <(find "${concordanceDir}/samplesheets/" -maxdepth 1 -type f -iname "*sampleId.txt") 
+done < <(find "${concordanceDir}/samplesheets/" -maxdepth 1 -type f -iname "*sampleId.txt")
 trap - EXIT
 exit 0
 

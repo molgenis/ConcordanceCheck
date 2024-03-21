@@ -26,7 +26,8 @@ workflow {
                     build1:row.build1, 
                     build2:row.build2, 
                     fileType1:row.fileType1, 
-                    fileType2:row.fileType2 ],
+                    fileType2:row.fileType2,
+                    processStepId:row.processStepId ],
                     [file(row.location1), file(row.location2)]] } \
         // convert if fileType is not VCF.
         | view

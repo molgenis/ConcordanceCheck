@@ -1,5 +1,0 @@
-module load Java/11-LTS 
-
-curl -s https://get.nextflow.io | bash
-
-./nextflow run main.nf --samplesheet test/mappingfile.full.csv --output /groups/umcg-atd/tmp07/umcg-gvdvries/concordance-nf/ -profile slurm

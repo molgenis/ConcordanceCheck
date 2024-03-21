@@ -14,8 +14,8 @@ set -eu
 		tabix -f -p vcf "${vcf}"
 	done
 
-	## create samplesheet 
-	mappingfile="!{meta.data1Id}_!{meta.data2Id}.sampleId.txt"
+	## create samplesheet
+	mappingfile="!{meta.processStepId}_!{meta.data1Id}_!{meta.data2Id}.sampleId.txt"
 	echo -e "data1Id\tdata2Id\tlocation1\tlocation2" > "${mappingfile}"
 	echo -e "!{meta.data1Id}\t!{meta.data2Id}\t!{vcf1}\t!{vcf2}" >> "${mappingfile}"
 
@@ -30,5 +30,5 @@ set -eu
 	-D2 VCF \
 	-ac \
 	--sampleMap "${mappingfile}" \
-	-o "!{meta.data1Id}"_"!{meta.data2Id}" \
+	-o "!{meta.processStepId}"_"!{meta.data1Id}"_"!{meta.data2Id}" \
 	-sva

@@ -54,19 +54,14 @@ workflow {
 
     Channel.empty().mix( ch_sample_liftovered, ch_sample_liftover.ready )
     | view
-//    | branch { meta, files ->
-  //      ready: files[0] =~ /.gz/ && files[1] =~ /.gz/
-  //      take: true }
     | set { ch_sample_check }
     
-//    ch_sample_check.take
     ch_sample_check
     | view
     | CHECK
     | map { meta, file1,file2 -> [meta,[ file1, file2 ] ]}
     | set { ch_sample_checked }
 
-//    Channel.empty().mix( ch_sample_checked, ch_sample_check.ready )
     Channel.empty().mix( ch_sample_checked )
     | view
     | CONCORDANCE

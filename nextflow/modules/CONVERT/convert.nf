@@ -7,8 +7,6 @@ process CONVERT {
 
     output:
     tuple val(meta), path(vcf1), path(vcf2)
-    //tuple val(meta), path(vcf1), path(vcf2)
-    //tuple val(meta), path('*.vcf*', arity: '2')
 
     shell:
     vcf1="${meta.data1Id}.converted.vcf.gz"

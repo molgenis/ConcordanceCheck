@@ -21,7 +21,7 @@ set -eu
 
 	# run concordancecheck
 	java -XX:ParallelGCThreads="!{task.cpus}" \
-	-Djava.io.tmpdir="!{params.TmpDir}" \
+	-Djava.io.tmpdir="!{params.tmpDir}" \
 	"-Xmx!{task.memory.toMega() - 256}m" \
 	-jar "${EBROOTCOMPAREGENOTYPECALLS}/CompareGenotypeCalls.jar" \
 	-d1 "!{vcf1}" \

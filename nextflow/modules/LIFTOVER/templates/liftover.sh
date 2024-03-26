@@ -14,7 +14,7 @@ set -eu
         cp "!{files[1]}" "!{vcf2}"
     fi
 
-    java -Djava.io.tmpdir="!{params.TmpDir}" \
+    java -Djava.io.tmpdir="!{params.tmpDir}" \
     -XX:ParallelGCThreads="!{task.cpus}" \
     "-Xmx!{task.memory.toMega() - 256}m" \
     -jar "${EBROOTPICARD}/picard.jar" \

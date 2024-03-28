@@ -227,6 +227,7 @@ EOH
 	then
 		cd "${concordanceDir}/jobs/"
 		sbatch "${concordanceCheckId}.sh"
+		sleep 3
 		touch "${concordanceCheckId}.sh.started"
 		cd -
 	fi

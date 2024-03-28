@@ -15,8 +15,8 @@ process CONCORDANCE {
 
     vcf1 = "${files[0]}"
     vcf2 = "${files[1]}"
-    sampleFile="${meta.processStepId}_${meta.data1Id}_${meta.data1Id}_${meta.data2Id}.sample"
-    variantFile="${meta.processStepId}_${meta.data1Id}_${meta.data1Id}_${meta.data2Id}.variants"
+    sampleFile="${meta.processStepId}_${meta.data1Id}_${meta.data2Id}.sample"
+    variantFile="${meta.processStepId}_${meta.data1Id}_${meta.data2Id}.variants"
 
     template 'concordance.sh'
 

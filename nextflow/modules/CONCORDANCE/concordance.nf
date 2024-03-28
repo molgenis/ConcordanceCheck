@@ -3,7 +3,7 @@ process CONCORDANCE {
     tag "$pair_id"
     module = ['CompareGenotypeCalls/1.8.1-Java-8-LTS','HTSlib/1.16-GCCcore-11.3.0']
 
-    publishDir "$params.output/concordance/results", mode: 'copy', overwrite: true
+    publishDir "$params.output", mode: 'copy', overwrite: true
 
     input:
     tuple val(meta), path(files)

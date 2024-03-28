@@ -198,8 +198,8 @@ cat << EOH > "${concordanceDir}/jobs/${concordanceCheckId}.sh"
 
 set -eu
 
-	module load "${nextflowVersion}"
 	module load "${ConcordanceCheckVersion}"
+	module load "${nextflowVersion}"
 
 	"${EBROOTNEXTFLOW}/nextflow" run /apps/software/ConcordanceCheck/beta/nextflow/main.nf \\
 	-main-script "${EBROOTCONCORDANCECHECK}/nextflow/main.nf" \\

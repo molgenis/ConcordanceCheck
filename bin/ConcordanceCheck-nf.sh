@@ -174,16 +174,32 @@ concordanceDir="/groups/${GROUP}/${TMP_LFS}/concordance/"
 
 while IFS= read -r sampleSheet
 do
+if [[ "${#sampleSheets[@]}" -eq '0' ]]
+then
+	log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "No sample sheets found @ ${concordanceDir}/samplesheets/: There is nothing to do."
+	trap - EXIT
+	exit 0
+else
 	log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Processing samplesheet ${sampleSheet} ..."
-	concordanceCheckId=$(basename "${sampleSheet}" .sampleId.txt)
+	filePrefix="$(basename "${sampleSheet}" .sampleId.txt)"
+	#concordanceCheckId=$(basename "${sampleSheet}" .sampleId.txt)
+	controlFileBase="${concordanceDir}/logs/"
+	export JOB_CONTROLE_FILE_BASE="${controlFileBase}/${filePrefix}.${SCRIPT_NAME}"
+	logDir="${concordanceDir}/logs/${filePrefix}"
+
+	# shellcheck disable=SC2174
+	mkdir -m 2770 -p "${logDir}"
+
 	if [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}.sh" ]]
 	then
-		touch "${concordanceDir}/logs/${concordanceCheckId}.ConcordanceCheck.started"
+		#touch "${concordanceDir}/logs/${concordanceCheckId}.ConcordanceCheck.started"
+		printf '' > "${JOB_CONTROLE_FILE_BASE}.started"
+
 		data1Id=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $1}')
 		data2Id=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $2}')
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Calculating concordance over ${data1Id} compared to ${data2Id}."
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Output file name: ${concordanceCheckId}."
-		
+
 cat << EOH > "${concordanceDir}/jobs/${concordanceCheckId}.sh"
 #!/bin/bash
 #SBATCH --job-name=Concordance_${concordanceCheckId}
@@ -196,8 +212,33 @@ cat << EOH > "${concordanceDir}/jobs/${concordanceCheckId}.sh"
 #SBATCH --export=NONE
 #SBATCH --get-user-env=60L
 
+set -o  pipefail
 set -eu
 
+# Env vars.
+export TMPDIR="${TMPDIR:-/tmp}" # Default to /tmp if $TMPDIR was not defined.
+SCRIPT_NAME="$(basename "${0}")"
+SCRIPT_NAME="${SCRIPT_NAME%.*sh}"
+INSTALLATION_DIR="$(cd -P "$(dirname "${0}")/.." && pwd)"
+LIB_DIR="${INSTALLATION_DIR}/lib"
+CFG_DIR="${INSTALLATION_DIR}/etc"
+HOSTNAME_SHORT="$(hostname -s)"
+ROLE_USER="$(whoami)"
+REAL_USER="$(logname 2>/dev/null || echo 'no login name')"
+
+#
+##
+### Functions.
+##
+#
+if [[ -f "${LIB_DIR}/sharedFunctions.bash" && -r "${LIB_DIR}/sharedFunctions.bash" ]]
+then
+	# shellcheck source=lib/sharedFunctions.bash
+	source "${LIB_DIR}/sharedFunctions.bash"
+else
+	printf '%s\n' "FATAL: cannot find or cannot access sharedFunctions.bash"
+	exit 1
+fi
 	module load "${ConcordanceCheckVersion}"
 	module load "${nextflowVersion}"
 
@@ -206,23 +247,25 @@ set -eu
 	--samplesheet "${sampleSheet}" \\
 	-work-dir "${concordanceDir}/tmp/" \\
 	--output "${concordanceDir}/results/" \\
-	-profile slurm
-
-	echo "finished"
+	-profile slurm \\
+	|| {
+			log4Bash 'TRACE' "${LINENO}" "${FUNCNAME[0]:-main}" "0" " Concordance pipeline crashed. Check ${concordanceDir}/jobs/${concordanceCheckId}.out"
+			mv -v "${JOB_CONTROLE_FILE_BASE}."{started,failed}
+			}
 
 	echo "${concordanceCheckVersion}" > "${concordanceDir}/results/${concordanceCheckId}.ConcordanceCheckVersion"
 
-	if [[ -e "${concordanceDir}/logs/${concordanceCheckId}.ConcordanceCheck.started" ]]
+	if [[ -e "${JOB_CONTROLE_FILE_BASE}.started" ]]
 	then
-		mv "${concordanceDir}/logs/${concordanceCheckId}.ConcordanceCheck."{started,finished}
+		mv "${JOB_CONTROLE_FILE_BASE}."{started,finished}
 	else
-		touch "${concordanceDir}/logs/${concordanceCheckId}.ConcordanceCheck.finished"
+		touch "${JOB_CONTROLE_FILE_BASE}.finished"
 	fi
 
 	mv "${concordanceDir}/jobs/${concordanceCheckId}.sh."{started,finished}
 EOH
 	fi
-	
+
 	if [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}.sh.started" ]] && [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}.sh.finished" ]]
 	then
 		cd "${concordanceDir}/jobs/"
@@ -232,5 +275,9 @@ EOH
 		cd -
 	fi
 done < <(find "${concordanceDir}/samplesheets/" -maxdepth 1 -type f -iname "*sampleId.txt")
+
+# Clean exit.
+#
+log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Finished successfully."
 trap - EXIT
 exit 0

@@ -12,32 +12,42 @@ log.info """\
          """
          .stripIndent()
 
-include { LIFTOVER } from './modules/LIFTOVER/liftover'
-include { CONVERT }  from './modules/CONVERT/convert'
-include { CHECK }  from './modules/CHECK/check'
-include { CONCORDANCE }  from './modules/CONCORDANCE/concordance'
+//include { LIFTOVER } from './modules/LIFTOVER/liftover'
+//include { CONVERT }  from './modules/CONVERT/convert'
+//include { CHECK }  from './modules/CHECK/check'
+//include { CONCORDANCE }  from './modules/CONCORDANCE/concordance'
+
+include { LIFTOVER } from './modules/LIFTOVER_v2/liftover'
+include { CONVERT }  from './modules/CONVERT_v2/convert'
+include { CHECK }  from './modules/CHECK_v2/check'
+include { CONCORDANCE }  from './modules/CONCORDANCE_v2/concordance'
 
 def split_samples(row) {
     def sampleList = []
 
     def sample1Metadata = [ "processStepId": row.processStepId,
-    "dataId1": row.data1Id,
-    "build1": row.build1,
-    "fileType1": row.fileType1,
+    "dataId": row.data1Id,
+    "build": row.build1,
+    "fileType": row.fileType1,
     "liftover": check_liftover(row.build1, row),
-    "file1": file(row.location1)]
+    "file": file(row.location1)]
     
     def sample2Metadata = [ "processStepId": row.processStepId,
-    "dataId2": row.data2Id,
-    "build2": row.build2,
-    "fileType2": row.fileType2,
+    "dataId": row.data2Id,
+    "build": row.build2,
+    "fileType": row.fileType2,
     "liftover": check_liftover(row.build2, row),
-    "file2": file(row.location2)]
+    "file": file(row.location2)]
 
     sampleList = [sample1Metadata,sample2Metadata]
 
     return sampleList
     }
+
+//def EXIT2 (item) {
+//   throw new RuntimeException("Error: Unknown fileType :'${item}', check jobfile for listed filetypes.")
+//   exit 1
+//}
 
 def check_liftover(rowbuild, row){
     if ( row.build1 != row.build2 && rowbuild != params.build ){
@@ -60,10 +70,12 @@ process tupleExample {
         tuple val(meta), val(data)
 
     """
-    echo "Processing ${meta} , filelist1: ${data[0]}, filelist2: ${data[1]}"
+    echo "Processing ${meta} , filelist1: ${data}"
 
       """
 }
+// echo "Processing ${meta} , filelist1: ${data[0]}, filelist2: ${data[1]}, liftover: ${data[0].liftover} ${data[1].liftover} "
+
 
 
 /**
@@ -89,11 +101,61 @@ workflow {
         | splitCsv(header:true, sep: '\t')
         | map { split_samples(it) }
         | flatten
-        | view
-        | map { sample -> [groupKey(sample.processStepId, 2), sample ] }
-        | groupTuple( remainder: true )
-        | map { key, group -> validateGroup(key, group) }
-        | set { my_channel }
+ //       | view
+        | branch { sample ->
+            OPENARRAY: sample.fileType ==~ /OPENARRAY/
+            CRAMBAM: sample.fileType ==~ /CRAM/ || sample.fileType ==~ /BAM/
+            VCF: sample.fileType ==~ /VCF/
+            UNKNOWN: true 
+             }
+        | set { ch_sample }
+
+    ch_sample.OPENARRAY
+//    | view
+    | map { meta -> [ meta, meta.file ] }
+    | CONVERT
+ //   | view
+    | map { meta, file -> [ meta, file ] }
+ //   | view
+//    | flatten
+    | branch { meta, file ->
+        take: meta.liftover == true
+        ready: true 
+        }
+    | set { ch_oa_liftover }
+
+    ch_sample.CRAMBAM
+    | view
+    
+    ch_sample.VCF
+  //  | view
+    | map {meta -> [ meta, meta.file ]}
+   // | view
+    //| flatten
+    | branch { meta, file ->
+        take: meta.liftover == true
+        ready: true 
+            }
+    | set { ch_vcf_liftover }
+
+    Channel.empty().mix( ch_vcf_liftover.take, ch_oa_liftover.take )
+ //   | view
+    | LIFTOVER
+ //   | view
+    | set { ch_vcfs_liftovered }
+
+    ch_sample.UNKNOWN
+    | view
+    | set { my_channel }
+    //| EXIT2
+
+    Channel.empty().mix( ch_vcfs_liftovered, ch_vcf_liftover.ready, ch_oa_liftover.ready)
+//    | view
+    | map { sample , file -> [groupKey(sample.processStepId, 2), sample, file ] }
+    | groupTuple( remainder: true )
+    | view
+    | map { key, group, file -> validateGroup(key, group) }
+    | set { my_channel }
 
 
     my_channel

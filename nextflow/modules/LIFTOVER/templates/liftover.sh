@@ -25,7 +25,7 @@ set -eu
     --REFERENCE_SEQUENCE "!{params.reference.b38}" \
     --REJECT "${sampleId}.!{params.build}.rejected.vcf" \
     --MAX_RECORDS_IN_RAM 100000 \
-    --TMP_DIR "!{params.TmpDir}" \
+    --TMP_DIR "!{params.tmpDir}" \
     --VERBOSITY WARNING \
     --WARN_ON_MISSING_CONTIG true \
     --WRITE_ORIGINAL_ALLELES true \

@@ -174,24 +174,22 @@ concordanceDir="/groups/${GROUP}/${TMP_LFS}/concordance/"
 
 while IFS= read -r sampleSheet
 do
-if [[ "${#sampleSheets[@]}" -eq '0' ]]
-then
-	log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "No sample sheets found @ ${concordanceDir}/samplesheets/: There is nothing to do."
-	trap - EXIT
-	exit 0
-else
 	log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Processing samplesheet ${sampleSheet} ..."
 	filePrefix="$(basename "${sampleSheet}" .sampleId.txt)"
+	concordanceCheckId=${filePrefix}
 	#concordanceCheckId=$(basename "${sampleSheet}" .sampleId.txt)
 	controlFileBase="${concordanceDir}/logs/"
-	export JOB_CONTROLE_FILE_BASE="${controlFileBase}/${filePrefix}.${SCRIPT_NAME}"
+	export JOB_CONTROLE_FILE_BASE="${controlFileBase}/${filePrefix}/${filePrefix}.${SCRIPT_NAME}"
 	logDir="${concordanceDir}/logs/${filePrefix}"
-
 	# shellcheck disable=SC2174
 	mkdir -m 2770 -p "${logDir}"
+	mkdir -p "${concordanceDir}/jobs/${concordanceCheckId}"
+	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "TEST ls ${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.sh"
 
 	if [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}.sh" ]]
 	then
+		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.sh FOUND"
+
 		#touch "${concordanceDir}/logs/${concordanceCheckId}.ConcordanceCheck.started"
 		printf '' > "${JOB_CONTROLE_FILE_BASE}.started"
 
@@ -200,11 +198,11 @@ else
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Calculating concordance over ${data1Id} compared to ${data2Id}."
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Output file name: ${concordanceCheckId}."
 
-cat << EOH > "${concordanceDir}/jobs/${concordanceCheckId}.sh"
+cat << EOH > "${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.sh"
 #!/bin/bash
 #SBATCH --job-name=Concordance_${concordanceCheckId}
-#SBATCH --output=${concordanceDir}/jobs/${concordanceCheckId}.out
-#SBATCH --error=${concordanceDir}/jobs/${concordanceCheckId}.err
+#SBATCH --output=${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.out
+#SBATCH --error=${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.err
 #SBATCH --time=00:30:00
 #SBATCH --cpus-per-task 1
 #SBATCH --mem 6gb
@@ -250,7 +248,9 @@ fi
 	-profile slurm \\
 	|| {
 			log4Bash 'TRACE' "${LINENO}" "${FUNCNAME[0]:-main}" "0" " Concordance pipeline crashed. Check ${concordanceDir}/jobs/${concordanceCheckId}.out"
+			tail -50 "${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.out" >> "${JOB_CONTROLE_FILE_BASE}.started"
 			mv -v "${JOB_CONTROLE_FILE_BASE}."{started,failed}
+			exit 1
 			}
 
 	echo "${concordanceCheckVersion}" > "${concordanceDir}/results/${concordanceCheckId}.ConcordanceCheckVersion"
@@ -262,18 +262,19 @@ fi
 		touch "${JOB_CONTROLE_FILE_BASE}.finished"
 	fi
 
-	mv "${concordanceDir}/jobs/${concordanceCheckId}.sh."{started,finished}
+	mv "${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.sh."{started,finished}
 EOH
 	fi
 
-	if [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}.sh.started" ]] && [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}.sh.finished" ]]
+	if [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.sh.started" ]] && [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.sh.finished" ]]
 	then
-		cd "${concordanceDir}/jobs/"
+		cd "${concordanceDir}/jobs/${concordanceCheckId}"
 		sbatch "${concordanceCheckId}.sh"
 		sleep 3
 		touch "${concordanceCheckId}.sh.started"
 		cd -
 	fi
+#fi
 done < <(find "${concordanceDir}/samplesheets/" -maxdepth 1 -type f -iname "*sampleId.txt")
 
 # Clean exit.

@@ -14,8 +14,8 @@ process LIFTOVER {
     vcf1 = "${meta.data1Id}.${params.build}.vcf.gz"
     vcf2 = "${meta.data2Id}.${params.build}.vcf.gz"
 
-    meta["build1"] = "${params.build}"
-    meta["build2"] = "${params.build}"
+    //meta["build1"] = "${params.build}"
+    //meta["build2"] = "${params.build}"
 
     template 'liftover.sh'
 

@@ -67,10 +67,10 @@ def check_liftover(rowbuild, row){
 
 process tupleExample {
     input:
-        tuple val(meta), val(data)
+        tuple val(id), val(meta), val(files) 
 
     """
-    echo "Processing ${meta} , filelist1: ${data}"
+    echo "Id ${id} , meta: ${meta[0].dataId} en ${meta[1].dataId}, files: ${files[0]} en ${files[1]} "
 
       """
 }
@@ -116,8 +116,6 @@ workflow {
     | CONVERT
  //   | view
     | map { meta, file -> [ meta, file ] }
- //   | view
-//    | flatten
     | branch { meta, file ->
         take: meta.liftover == true
         ready: true 
@@ -130,8 +128,6 @@ workflow {
     ch_sample.VCF
   //  | view
     | map {meta -> [ meta, meta.file ]}
-   // | view
-    //| flatten
     | branch { meta, file ->
         take: meta.liftover == true
         ready: true 
@@ -141,7 +137,6 @@ workflow {
     Channel.empty().mix( ch_vcf_liftover.take, ch_oa_liftover.take )
  //   | view
     | LIFTOVER
- //   | view
     | set { ch_vcfs_liftovered }
 
     ch_sample.UNKNOWN
@@ -153,74 +148,15 @@ workflow {
 //    | view
     | map { sample , file -> [groupKey(sample.processStepId, 2), sample, file ] }
     | groupTuple( remainder: true )
+//    | !!fix
+//    | map { key, group, files -> [ validateGroup(key, group), files ] }
     | view
-    | map { key, group, file -> validateGroup(key, group) }
     | set { my_channel }
 
 
     my_channel
-    | view
-//    | map {key, group -> [ group ] }
-    | tupleExample
-//    | map {key, group -> [ group ] }
- //   | view
+    | map {meta -> [ meta[0], meta[1], meta[2] ] }
+ //   | tupleExample
+    | CONCORDANCE
 
 }
-//break
-
-/*
-workflow {
-    Channel.fromPath(params.samplesheet) \
-        | splitCsv(header:true, sep: '\t') \
-        | map { row -> [[ 
-                    data1Id:row.data1Id,
-                    data2Id:row.data2Id, 
-                    build1:row.build1, 
-                    build2:row.build2, 
-                    fileType1:row.fileType1, 
-                    fileType2:row.fileType2,
-                    processStepId:row.processStepId ],
-                    [file(row.location1), file(row.location2)]] } \
-        // convert if fileType is not VCF.
-        | view
-        | branch { meta, files ->
-            take: meta.fileType1 ==~ /OPENARRAY/ || meta.fileType2 ==~ /OPENARRAY/
-            ready: true }
-        | set { ch_sample }
-
-    ch_sample.take
-    | CONVERT
-    | map { meta, file1,file2 -> [meta,[ file1, file2 ] ]}
-    | set { ch_samples_processed }
-
-    Channel.empty().mix(ch_samples_processed, ch_sample.ready)
-    | branch { meta, files ->
-        take: meta.build1 != meta.build2
-        ready: true }
-    | set { ch_sample_liftover }
-
-    ch_sample_liftover.take
-    | view
-    | LIFTOVER
-    | map { meta, file1, file2 -> [meta,[ file1, file2 ] ]}
-    | set { ch_sample_liftovered }
-
-    Channel.empty().mix( ch_sample_liftovered, ch_sample_liftover.ready )
-    | view
-//    | branch { meta, files ->
-  //      ready: files[0] =~ /.gz/ && files[1] =~ /.gz/
-  //      take: true }
-    | set { ch_sample_check }
-    
-//    ch_sample_check.take
-    ch_sample_check
-    | view
-    | CHECK
-    | map { meta, file1,file2 -> [meta,[ file1, file2 ] ]}
-    | set { ch_sample_checked }
-
-//    Channel.empty().mix( ch_sample_checked, ch_sample_check.ready )
-    Channel.empty().mix( ch_sample_checked )
-    | view
-    | CONCORDANCE
-}*/

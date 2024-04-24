@@ -14,55 +14,129 @@ log.info """\
 
 include { LIFTOVER } from './modules/LIFTOVER/liftover'
 include { CONVERT }  from './modules/CONVERT/convert'
-include { CHECK }  from './modules/CHECK/check'
+include { SNPCALL }  from './modules/SNPCALL/snpcall'
 include { CONCORDANCE }  from './modules/CONCORDANCE/concordance'
+
+def split_samples(row) {
+    def sampleList = []
+
+    def sample1Metadata = [ "processStepId": row.processStepId,
+    "dataId": row.data1Id,
+    "build": row.build1,
+    "fileType": row.fileType1,
+    "liftover": check_liftover(row.build1, row),
+    "file": file(row.location1)]
+    
+    def sample2Metadata = [ "processStepId": row.processStepId,
+    "dataId": row.data2Id,
+    "build": row.build2,
+    "fileType": row.fileType2,
+    "liftover": check_liftover(row.build2, row),
+    "file": file(row.location2)]
+
+    sampleList = [sample1Metadata,sample2Metadata]
+
+    return sampleList
+    }
+
+//def EXIT2 (item) {
+//   throw new RuntimeException("Error: Unknown fileType :'${item}', check jobfile for listed filetypes.")
+//   exit 1
+//}
+
+def check_liftover(rowbuild, row){
+    if ( row.build1 != row.build2 && rowbuild != params.build ){
+        return true
+        }
+    else if ( row.build1 != row.build2 && rowbuild == params.build ){
+        return false
+    }
+    else if ( row.build1 == row.build2 ){
+        return false
+    }
+    else {
+        throw new RuntimeException("error: Something when wrong determenting liftover for:'${row.build1}' and '${row.build2}'")
+    }
+
+}
+
+/**
+ * return validated groupTuple result
+ */
+def validateGroup(key, group) {
+  // validate group size
+  if(key.getGroupSize() != group.size()) {
+    throw new RuntimeException("error: expected group size '${key.getGroupSize()}' differs from actual group size '${group.size()}'. this might indicate a bug in the software")
+  }
+
+  // extract key from 'nextflow.extension.GroupKey'
+  def keyTarget = key.getGroupTarget()
+
+  // workaround: groupTuple can return a group of type 'nextflow.util.ArrayBag' which does not implement hashCode/equals 
+  def groupList = group.collect()
+  
+  return [keyTarget, groupList]
+}
 
 workflow {
     Channel.fromPath(params.samplesheet) \
-        | splitCsv(header:true, sep: '\t') \
-        | map { row -> [[ 
-                    data1Id:row.data1Id,
-                    data2Id:row.data2Id, 
-                    build1:row.build1, 
-                    build2:row.build2, 
-                    fileType1:row.fileType1, 
-                    fileType2:row.fileType2,
-                    processStepId:row.processStepId ],
-                    [file(row.location1), file(row.location2)]] } \
-        // convert if fileType is not VCF.
-        | view
-        | branch { meta, files ->
-            take: meta.fileType1 ==~ /OPENARRAY/ || meta.fileType2 ==~ /OPENARRAY/
-            ready: true }
+        | splitCsv(header:true, sep: '\t')
+        | map { split_samples(it) }
+        | flatten
+        | branch { sample ->
+            OPENARRAY: sample.fileType ==~ /OPENARRAY/
+            CRAMBAM: sample.fileType ==~ /CRAM/ || sample.fileType ==~ /BAM/
+            VCF: sample.fileType ==~ /VCF/
+            UNKNOWN: true 
+             }
         | set { ch_sample }
 
-    ch_sample.take
+    ch_sample.OPENARRAY
+    | map { meta -> [ meta, meta.file ] }
     | CONVERT
-    | map { meta, file1,file2 -> [meta,[ file1, file2 ] ]}
-    | set { ch_samples_processed }
+    | map { meta, file -> [ meta, file ] }
+    | branch { meta, file ->
+        take: meta.liftover == true
+        ready: true 
+        }
+    | set { ch_oa_liftover }
 
-    Channel.empty().mix(ch_samples_processed, ch_sample.ready)
-    | branch { meta, files ->
-        take: meta.build1 != meta.build2
-        ready: true }
-    | set { ch_sample_liftover }
+    ch_sample.CRAMBAM
+    | map {meta -> [ meta, meta.file ]}
+    | view
+    | SNPCALL
+    | view
+    | branch { meta, file ->
+        take: meta.liftover == true
+        ready: true 
+        }
+    | set { ch_snpcall_liftover }
 
-    ch_sample_liftover.take
+    ch_sample.VCF
+    | map {meta -> [ meta, meta.file ]}
+    | branch { meta, file ->
+        take: meta.liftover == true
+        ready: true 
+            }
+    | set { ch_vcf_liftover }
+
+    Channel.empty().mix( ch_vcf_liftover.take, ch_oa_liftover.take, ch_snpcall_liftover.take )
     | LIFTOVER
-    | map { meta, file1, file2 -> [meta,[ file1, file2 ] ]}
-    | set { ch_sample_liftovered }
+    | set { ch_vcfs_liftovered }
 
-    Channel.empty().mix( ch_sample_liftovered, ch_sample_liftover.ready )
+    ch_sample.UNKNOWN
     | view
-    | set { ch_sample_check }
-    
-    ch_sample_check
-    | view
-    | CHECK
-    | map { meta, file1,file2 -> [meta,[ file1, file2 ] ]}
-    | set { ch_sample_checked }
+    | set { my_channel }
+    //| EXIT2
 
-    Channel.empty().mix( ch_sample_checked )
-    | view
+    Channel.empty().mix( ch_vcfs_liftovered, ch_vcf_liftover.ready, ch_oa_liftover.ready, ch_snpcall_liftover.ready)
+    | map { sample , file -> [groupKey(sample.processStepId, 2), sample, file ] }
+    | groupTuple( remainder: true )
+//    | map { key, group, files -> [ validateGroup(key, group), files ] } !!fix
+//    | view
+    | set { ch_vcfs_concordance }
+
+    ch_vcfs_concordance
+    | map {meta -> [ meta[0], meta[1], meta[2] ] }
     | CONCORDANCE
 }

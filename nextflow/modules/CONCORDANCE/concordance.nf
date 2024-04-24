@@ -6,7 +6,7 @@ process CONCORDANCE {
     publishDir "$params.output", mode: 'copy', overwrite: true
 
     input:
-    tuple val(meta), path(files)
+    tuple val(id), val(meta), val(files)
 
     output:
     tuple val(meta), path(sampleFile), path(variantFile)
@@ -15,15 +15,15 @@ process CONCORDANCE {
 
     vcf1 = "${files[0]}"
     vcf2 = "${files[1]}"
-    sampleFile="${meta.processStepId}_${meta.data1Id}_${meta.data2Id}.sample"
-    variantFile="${meta.processStepId}_${meta.data1Id}_${meta.data2Id}.variants"
+    sampleFile="${id}_${meta[0].dataId}_${meta[1].dataId}.sample"
+    variantFile="${id}_${meta[0].dataId}_${meta[1].dataId}.variants"
 
     template 'concordance.sh'
 
     stub:
 
-    sampleFile="${meta.processStepId}_${meta.data1Id}_${meta.data2Id}.sample"
-    variantFile="${meta.processStepId}_${meta.data1Id}_${meta.data2Id}.variant"
+    sampleFile="${id}_${meta[0].dataId}_${meta[1].dataId}.sample"
+    variantFile="${id}_${meta[0].dataId}_${meta[1].dataId}.variants"
     """
     touch "${sampleFile}"
     touch "${variantFile}"

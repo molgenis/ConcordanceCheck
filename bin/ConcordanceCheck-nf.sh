@@ -214,7 +214,7 @@ set -o  pipefail
 set -eu
 
 # Env vars.
-export TMPDIR="${TMPDIR:-/tmp}" # Default to /tmp if $TMPDIR was not defined.
+export TMPDIR="${TMPDIR:-/tmp}" # Default to /tmp if "${TMPDIR}" was not defined.
 SCRIPT_NAME="$(basename "${0}")"
 SCRIPT_NAME="${SCRIPT_NAME%.*sh}"
 INSTALLATION_DIR="$(cd -P "$(dirname "${0}")/.." && pwd)"

@@ -39,9 +39,8 @@ def split_samples(row) {
     return sampleList
     }
 
-//def EXIT2 (item) {
-//   throw new RuntimeException("Error: Unknown fileType :'${item}', check jobfile for listed filetypes.")
-//   exit 1
+//def EXIT1(item) {
+//    System.exit(1)
 //}
 
 def check_liftover(rowbuild, row){
@@ -126,8 +125,6 @@ workflow {
 
     ch_sample.UNKNOWN
     | view
-    | set { my_channel }
-    //| EXIT2
 
     Channel.empty().mix( ch_vcfs_liftovered, ch_vcf_liftover.ready, ch_oa_liftover.ready, ch_snpcall_liftover.ready)
     | map { sample , file -> [groupKey(sample.processStepId, 2), sample, file ] }

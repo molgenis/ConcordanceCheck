@@ -176,8 +176,7 @@ while IFS= read -r sampleSheet
 do
 	log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Processing samplesheet ${sampleSheet} ..."
 	filePrefix="$(basename "${sampleSheet}" .sampleId.txt)"
-	concordanceCheckId=${filePrefix}
-	#concordanceCheckId=$(basename "${sampleSheet}" .sampleId.txt)
+	concordanceCheckId="${filePrefix}"
 	controlFileBase="${concordanceDir}/logs/"
 	export JOB_CONTROLE_FILE_BASE="${controlFileBase}/${filePrefix}/${filePrefix}.${SCRIPT_NAME}"
 	logDir="${concordanceDir}/logs/${filePrefix}"
@@ -190,7 +189,6 @@ do
 	then
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.sh FOUND"
 
-		#touch "${concordanceDir}/logs/${concordanceCheckId}.ConcordanceCheck.started"
 		printf '' > "${JOB_CONTROLE_FILE_BASE}.started"
 
 		data1Id=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $1}')
@@ -274,7 +272,6 @@ EOH
 		touch "${concordanceCheckId}.sh.started"
 		cd -
 	fi
-#fi
 done < <(find "${concordanceDir}/samplesheets/" -maxdepth 1 -type f -iname "*sampleId.txt")
 
 # Clean exit.

@@ -30,5 +30,5 @@ set -eu
 	-D2 VCF \
 	-ac \
 	--sampleMap "${mappingfile}" \
-	-o "!{id}"_"!{meta[0].dataId}"_"!{meta[1].dataId}" \
+	-o "!{meta[0].fileprefix}" \
 	-sva

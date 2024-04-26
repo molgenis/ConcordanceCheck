@@ -3,10 +3,10 @@ process CONCORDANCE {
     tag "$pair_id"
     module = ['CompareGenotypeCalls/1.8.1-Java-8-LTS','HTSlib/1.16-GCCcore-11.3.0']
 
-    publishDir "$params.output/concordance/results", mode: 'copy', overwrite: true
+    publishDir "$params.output", mode: 'copy', overwrite: true
 
     input:
-    tuple val(meta), path(files)
+    tuple val(id), val(meta), val(files)
 
     output:
     tuple val(meta), path(sampleFile), path(variantFile)
@@ -15,15 +15,15 @@ process CONCORDANCE {
 
     vcf1 = "${files[0]}"
     vcf2 = "${files[1]}"
-    sampleFile="${meta.processStepId}_${meta.data1Id}_${meta.data1Id}_${meta.data2Id}.sample"
-    variantFile="${meta.processStepId}_${meta.data1Id}_${meta.data1Id}_${meta.data2Id}.variants"
+    sampleFile="${id}_${meta[0].dataId}_${meta[1].dataId}.sample"
+    variantFile="${id}_${meta[0].dataId}_${meta[1].dataId}.variants"
 
     template 'concordance.sh'
 
     stub:
 
-    sampleFile="${meta.processStepId}_${meta.data1Id}_${meta.data2Id}.sample"
-    variantFile="${meta.processStepId}_${meta.data1Id}_${meta.data2Id}.variant"
+    sampleFile="${id}_${meta[0].dataId}_${meta[1].dataId}.sample"
+    variantFile="${id}_${meta[0].dataId}_${meta[1].dataId}.variants"
     """
     touch "${sampleFile}"
     touch "${variantFile}"

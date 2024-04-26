@@ -17,7 +17,7 @@ include { CONVERT }  from './modules/CONVERT/convert'
 include { SNPCALL }  from './modules/SNPCALL/snpcall'
 include { CONCORDANCE }  from './modules/CONCORDANCE/concordance'
 
-def split_samples(row) {
+def split_samples( row ) {
     def sampleList = []
 
     def sample1Metadata = [ "processStepId": row.processStepId,
@@ -26,7 +26,7 @@ def split_samples(row) {
     "fileType": row.fileType1,
     "liftover": check_liftover(row.build1, row),
     "file": file(row.location1)]
-    
+
     def sample2Metadata = [ "processStepId": row.processStepId,
     "dataId": row.data2Id,
     "build": row.build2,
@@ -39,11 +39,7 @@ def split_samples(row) {
     return sampleList
     }
 
-//def EXIT1(item) {
-//    System.exit(1)
-//}
-
-def check_liftover(rowbuild, row){
+def check_liftover( rowbuild, row ){
     if ( row.build1 != row.build2 && rowbuild != params.build ){
         return true
         }
@@ -62,10 +58,10 @@ def check_liftover(rowbuild, row){
 /**
  * return validated groupTuple result
  */
-def validateGroup(key, group) {
+def validateGroup( key, group, files ) {
   // validate group size
-  if(key.getGroupSize() != group.size()) {
-    throw new RuntimeException("error: expected group size '${key.getGroupSize()}' differs from actual group size '${group.size()}'. this might indicate a bug in the software")
+  if(key.getGroupSize() != group.size() || key.getGroupSize() != files.size()) {
+    throw new RuntimeException("error: expected group size '${key.getGroupSize()}' differs from actual group size '${group.size()}' or '${files.size()}'. this might indicate a bug in the software")
   }
 
   // extract key from 'nextflow.extension.GroupKey'
@@ -73,21 +69,22 @@ def validateGroup(key, group) {
 
   // workaround: groupTuple can return a group of type 'nextflow.util.ArrayBag' which does not implement hashCode/equals 
   def groupList = group.collect()
-  
-  return [keyTarget, groupList]
+  def filesList = files.collect()
+
+  return [keyTarget, groupList, filesList]
 }
 
 workflow {
-    Channel.fromPath(params.samplesheet) \
-        | splitCsv(header:true, sep: '\t')
+    Channel.fromPath( params.samplesheet ) \
+        | splitCsv( header:true, sep: '\t' )
         | map { split_samples(it) }
         | flatten
         | branch { sample ->
-            OPENARRAY: sample.fileType ==~ /OPENARRAY/
-            CRAMBAM: sample.fileType ==~ /CRAM/ || sample.fileType ==~ /BAM/
-            VCF: sample.fileType ==~ /VCF/
+            OPENARRAY: sample.fileType.toUpperCase() ==~ /OPENARRAY/
+            CRAMBAM: sample.fileType.toUpperCase() ==~ /CRAM/ || sample.fileType.toUpperCase() ==~ /BAM/
+            VCF: sample.fileType.toUpperCase() ==~ /VCF/
             UNKNOWN: true 
-             }
+            }
         | set { ch_sample }
 
     ch_sample.OPENARRAY
@@ -101,10 +98,8 @@ workflow {
     | set { ch_oa_liftover }
 
     ch_sample.CRAMBAM
-    | map {meta -> [ meta, meta.file ]}
-    | view
+    | map { meta -> [ meta, meta.file ]}
     | SNPCALL
-    | view
     | branch { meta, file ->
         take: meta.liftover == true
         ready: true 
@@ -112,7 +107,7 @@ workflow {
     | set { ch_snpcall_liftover }
 
     ch_sample.VCF
-    | map {meta -> [ meta, meta.file ]}
+    | map { meta -> [ meta, meta.file ]}
     | branch { meta, file ->
         take: meta.liftover == true
         ready: true 
@@ -124,16 +119,16 @@ workflow {
     | set { ch_vcfs_liftovered }
 
     ch_sample.UNKNOWN
-    | view
+    | subscribe { item -> println "Error, got UNKNOWN fileType: ${item}" }
 
     Channel.empty().mix( ch_vcfs_liftovered, ch_vcf_liftover.ready, ch_oa_liftover.ready, ch_snpcall_liftover.ready)
     | map { sample , file -> [groupKey(sample.processStepId, 2), sample, file ] }
     | groupTuple( remainder: true )
-//    | map { key, group, files -> [ validateGroup(key, group), files ] } !!fix
-//    | view
+    | map { key, group, files -> validateGroup(key, group, files) }
     | set { ch_vcfs_concordance }
 
     ch_vcfs_concordance
-    | map {meta -> [ meta[0], meta[1], meta[2] ] }
+    | map { meta -> [ meta[0], meta[1], meta[2] ] }
+    | view
     | CONCORDANCE
 }

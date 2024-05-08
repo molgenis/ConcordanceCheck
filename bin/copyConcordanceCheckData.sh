@@ -224,10 +224,9 @@ else
 		filePrefix=$(basename "${sampleSheet%.sampleId.txt}")
 		log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Processing run ${filePrefix} ..."
 		controlFileBase="${PRM_ROOT_DIR}/logs/${filePrefix}"
-		export JOB_CONTROLE_FILE_BASE="${controlFileBase}/${filePrefix}/${filePrefix}.${SCRIPT_NAME}"
-		logDir="${controlFileBase}/${filePrefix}"
+		export JOB_CONTROLE_FILE_BASE="${controlFileBase}/${filePrefix}.${SCRIPT_NAME}"
 		# shellcheck disable=SC2174
-		mkdir -m 2770 -p "${logDir}"
+		mkdir -m 2770 -p "${controlFileBase}"
 		
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "checking if exist: ${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/logs/${filePrefix}/${filePrefix}.ConcordanceCheck.finished" 
 		if ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" test -e "${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/logs/${filePrefix}/${filePrefix}.ConcordanceCheck.finished"
@@ -248,6 +247,7 @@ else
 			done < <(find "${PRM_ROOT_DIR}/concordance/results/" -maxdepth 1 -type f -iname "${filePrefix}.*")
 			# shellcheck disable=SC2029
 			ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "mv \"${sampleSheet}\" \"${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/archive/\""
+			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "moved: ${JOB_CONTROLE_FILE_BASE}.{started,finished}"
 			mv "${JOB_CONTROLE_FILE_BASE}."{started,finished}
 
 		else

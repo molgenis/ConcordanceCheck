@@ -238,8 +238,7 @@ fi
 	module load "${ConcordanceCheckVersion}"
 	module load "${nextflowVersion}"
 
-	"${EBROOTNEXTFLOW}/nextflow" run "${EBROOTCONCORDANCECHECK}nextflow/main.nf" \\
-	-main-script "${EBROOTCONCORDANCECHECK}/nextflow/main.nf" \\
+	"${EBROOTNEXTFLOW}/nextflow" run "${EBROOTCONCORDANCECHECK}/nextflow/main.nf" \\
 	--samplesheet "${sampleSheet}" \\
 	-work-dir "${concordanceDir}/tmp/" \\
 	--output "${concordanceDir}/results/" \\

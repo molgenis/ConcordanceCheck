@@ -131,7 +131,7 @@ declare -a configFiles=(
 	"${HOME}/molgenis.cfg"
 )
 
-for configFile in "${configFiles[@]}"; do 
+for configFile in "${configFiles[@]}"; do
 	if [[ -f "${configFile}" && -r "${configFile}" ]]
 	then
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Sourcing config file ${configFile} ..."
@@ -177,11 +177,11 @@ do
 	log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Processing samplesheet ${sampleSheet} ..."
 	filePrefix="$(basename "${sampleSheet}" .sampleId.txt)"
 	concordanceCheckId="${filePrefix}"
-	controlFileBase="${concordanceDir}/logs/"
-	export JOB_CONTROLE_FILE_BASE="${controlFileBase}/${filePrefix}/${filePrefix}.${SCRIPT_NAME}"
+	controlFileBase="${concordanceDir}/logs/concordance/"
+	export JOB_CONTROLE_FILE_BASE="${controlFileBase}/${filePrefix}.${SCRIPT_NAME}"
 	logDir="${concordanceDir}/logs/${filePrefix}"
 	# shellcheck disable=SC2174
-	mkdir -m 2770 -p "${logDir}"
+	mkdir -m 2770 -p "${controlFileBase}"
 	mkdir -p "${concordanceDir}/jobs/${concordanceCheckId}"
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "TEST ls ${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.sh"
 

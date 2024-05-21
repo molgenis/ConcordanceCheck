@@ -223,7 +223,7 @@ else
 		#
 		filePrefix=$(basename "${sampleSheet%.sampleId.txt}")
 		log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Processing run ${filePrefix} ..."
-		controlFileBase="${PRM_ROOT_DIR}/logs/${filePrefix}"
+		controlFileBase="${PRM_ROOT_DIR}/logs/concordance/"
 		export JOB_CONTROLE_FILE_BASE="${controlFileBase}/${filePrefix}.${SCRIPT_NAME}"
 		# shellcheck disable=SC2174
 		mkdir -m 2770 -p "${controlFileBase}"

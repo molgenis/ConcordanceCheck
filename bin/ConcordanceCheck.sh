@@ -179,7 +179,6 @@ do
 	concordanceCheckId="${filePrefix}"
 	controlFileBase="${concordanceDir}/logs/concordance/"
 	export JOB_CONTROLE_FILE_BASE="${controlFileBase}/${filePrefix}.${SCRIPT_NAME}"
-	logDir="${concordanceDir}/logs/${filePrefix}"
 	# shellcheck disable=SC2174
 	mkdir -m 2770 -p "${controlFileBase}"
 	mkdir -p "${concordanceDir}/jobs/${concordanceCheckId}"

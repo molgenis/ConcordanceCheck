@@ -131,7 +131,7 @@ declare -a configFiles=(
 	"${HOME}/molgenis.cfg"
 )
 
-for configFile in "${configFiles[@]}"; do 
+for configFile in "${configFiles[@]}"; do
 	if [[ -f "${configFile}" && -r "${configFile}" ]]
 	then
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Sourcing config file ${configFile} ..."
@@ -165,60 +165,41 @@ log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Successfully got exclusive
 log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Log files will be written to ${TMP_ROOT_DIR}/logs ..."
 
 concordanceCheckVersion=$(module list | grep -o -P 'ConcordanceCheck(.+)')
-module load "${htsLibVersion}"
-module load "${compareGenotypeCallsVersion}"
-module load "${bedToolsVersion}"
 module list
 
-
 concordanceDir="/groups/${GROUP}/${TMP_LFS}/concordance/"
-ngsVcfDir="${concordanceDir}/ngs/"
-arrayVcfDir="${concordanceDir}/array/"
+
+# header format of .sampleId.txt
+##data1Id	data2Id	location1	location2	fileType1	fileType2	build1	build2	processStepId
 
 while IFS= read -r sampleSheet
 do
 	log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Processing samplesheet ${sampleSheet} ..."
-	concordanceCheckId=$(basename "${sampleSheet}" .sampleId.txt)
+	filePrefix="$(basename "${sampleSheet}" .sampleId.txt)"
+	concordanceCheckId="${filePrefix}"
+	controlFileBase="${concordanceDir}/logs/concordance/"
+	export JOB_CONTROLE_FILE_BASE="${controlFileBase}/${filePrefix}.${SCRIPT_NAME}"
+	# shellcheck disable=SC2174
+	mkdir -m 2770 -p "${controlFileBase}"
+	mkdir -p "${concordanceDir}/jobs/${concordanceCheckId}"
+	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "TEST ls ${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.sh"
+
 	if [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}.sh" ]]
 	then
-		touch "${concordanceDir}/logs/${concordanceCheckId}.ConcordanceCheck.started"
-		arrayId=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $1}')
-		arrayVcf="${arrayId}.FINAL.vcf"
-		ngsId=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $2}')
-		ngsVcf=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $4}')
-		ngsVcf="$(basename "${ngsVcf}")"
-		getNgsVcfExtension="${ngsVcf##*.}"
-		if [[ "${getNgsVcfExtension}" != "gz" ]]
-		then
-			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "VCF file ${ngsVcf} is not compressed. bgzip-ping now ..."
-			ml HTSlib
-			bgzip "${ngsVcfDir}/${ngsVcf}"
-			ngsVcf="${ngsVcf}.gz"
-		fi
-		bedType="$(zcat "${ngsVcfDir}/${ngsVcf}" | grep -m 1 -o -P 'intervals=\[[^\]]*.bed\]' | cut -d [ -f2 | cut -d ] -f1)"
-		bedDir="$(dirname "${bedType}")"
-		bedFile="${bedDir}/captured.merged.bed"
-		mkdir -p "${concordanceDir}/tmp/${concordanceCheckId}/"
-		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Calculating concordance over ${ngsVcf} compared to ${arrayVcf}."
-		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Using ${bedFile} to intersect the array vcf file."
+		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.sh FOUND"
+
+		printf '' > "${JOB_CONTROLE_FILE_BASE}.started"
+
+		data1Id=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $1}')
+		data2Id=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $2}')
+		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Calculating concordance over ${data1Id} compared to ${data2Id}."
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Output file name: ${concordanceCheckId}."
-		#
-		# Remove InDel calls from NGS VCF.
-		#
-		zcat "${ngsVcfDir}/${ngsVcf}" | grep '^#' > "${concordanceDir}/tmp/${concordanceCheckId}/${ngsId}.FINAL.vcf"
-		zcat "${ngsVcfDir}/${ngsVcf}" | grep -v '^#' | awk '{if (length($4)<2 && length($5)<2 ){print $0}}' >> "${concordanceDir}/tmp/${concordanceCheckId}/${ngsId}.FINAL.vcf"
-		bgzip -c "${concordanceDir}/tmp/${concordanceCheckId}/${ngsId}.FINAL.vcf" > "${concordanceDir}/tmp/${concordanceCheckId}/${ngsId}.FINAL.vcf.gz"
-		tabix -p vcf "${concordanceDir}/tmp/${concordanceCheckId}/${ngsId}.FINAL.vcf.gz"
-		bedtools intersect -a "${arrayVcfDir}/${arrayVcf}" -b "${bedFile}" -header \
-				> "${concordanceDir}/tmp/${concordanceCheckId}/${arrayId}.FINAL.ExonFiltered.vcf" \
-				2> "${concordanceDir}/logs/${concordanceCheckId}.ConcordanceCheck.started" \
-			|| log4Bash 'FATAL' "${LINENO}" "${FUNCNAME:-main}" "${?}" "Failed to execute 'bedtools intersect' command."
-		
-cat << EOH > "${concordanceDir}/jobs/${concordanceCheckId}.sh"
+
+cat << EOH > "${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.sh"
 #!/bin/bash
 #SBATCH --job-name=Concordance_${concordanceCheckId}
-#SBATCH --output=${concordanceDir}/jobs/${concordanceCheckId}.out
-#SBATCH --error=${concordanceDir}/jobs/${concordanceCheckId}.err
+#SBATCH --output=${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.out
+#SBATCH --error=${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.err
 #SBATCH --time=00:30:00
 #SBATCH --cpus-per-task 1
 #SBATCH --mem 6gb
@@ -226,46 +207,73 @@ cat << EOH > "${concordanceDir}/jobs/${concordanceCheckId}.sh"
 #SBATCH --export=NONE
 #SBATCH --get-user-env=60L
 
+set -o  pipefail
 set -eu
-	module load "${htsLibVersion}"
-	module load "${compareGenotypeCallsVersion}"
-	module load "${bedToolsVersion}"
-	bgzip -c "${concordanceDir}/tmp/${concordanceCheckId}/${arrayId}.FINAL.ExonFiltered.vcf" > "${concordanceDir}/tmp/${concordanceCheckId}/${arrayId}.FINAL.ExonFiltered.vcf.gz"
-	tabix -p vcf "${concordanceDir}/tmp/${concordanceCheckId}/${arrayId}.FINAL.ExonFiltered.vcf.gz"
 
-	java -XX:ParallelGCThreads=1 -Djava.io.tmpdir="${concordanceDir}/temp/" -Xmx9g -jar ${EBROOTCOMPAREGENOTYPECALLS}/CompareGenotypeCalls.jar \\
-	-d1 "${concordanceDir}/tmp/${concordanceCheckId}/${arrayId}.FINAL.ExonFiltered.vcf.gz" \\
-	-D1 VCF \\
-	-d2 "${concordanceDir}/tmp/${concordanceCheckId}/${ngsId}.FINAL.vcf.gz" \\
-	-D2 VCF \\
-	-ac \\
-	--sampleMap "${sampleSheet}" \\
-	-o "${concordanceDir}/tmp/${concordanceCheckId}" \\
-	-sva
+# Env vars.
+export TMPDIR="${TMPDIR:-/tmp}" # Default to /tmp if "${TMPDIR}" was not defined.
+SCRIPT_NAME="$(basename "${0}")"
+SCRIPT_NAME="${SCRIPT_NAME%.*sh}"
+INSTALLATION_DIR="$(cd -P "$(dirname "${0}")/.." && pwd)"
+LIB_DIR="${INSTALLATION_DIR}/lib"
+CFG_DIR="${INSTALLATION_DIR}/etc"
+HOSTNAME_SHORT="$(hostname -s)"
+ROLE_USER="$(whoami)"
+REAL_USER="$(logname 2>/dev/null || echo 'no login name')"
 
-	mv -v "${concordanceDir}/tmp/${concordanceCheckId}.sample" "${concordanceDir}/results/"
-	mv -v "${concordanceDir}/tmp/${concordanceCheckId}.variants" "${concordanceDir}/results/"
+#
+##
+### Functions.
+##
+#
+if [[ -f "${LIB_DIR}/sharedFunctions.bash" && -r "${LIB_DIR}/sharedFunctions.bash" ]]
+then
+	# shellcheck source=lib/sharedFunctions.bash
+	source "${LIB_DIR}/sharedFunctions.bash"
+else
+	printf '%s\n' "FATAL: cannot find or cannot access sharedFunctions.bash"
+	exit 1
+fi
+	module load "${ConcordanceCheckVersion}"
+	module load "${nextflowVersion}"
+
+	"${EBROOTNEXTFLOW}/nextflow" run "${EBROOTCONCORDANCECHECK}/nextflow/main.nf" \\
+	--samplesheet "${sampleSheet}" \\
+	-work-dir "${concordanceDir}/tmp/" \\
+	--output "${concordanceDir}/results/" \\
+	-profile slurm \\
+	|| {
+			log4Bash 'TRACE' "${LINENO}" "${FUNCNAME[0]:-main}" "0" " Concordance pipeline crashed. Check ${concordanceDir}/jobs/${concordanceCheckId}.out"
+			tail -50 "${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.out" >> "${JOB_CONTROLE_FILE_BASE}.started"
+			mv -v "${JOB_CONTROLE_FILE_BASE}."{started,failed}
+			exit 1
+			}
+
 	echo "${concordanceCheckVersion}" > "${concordanceDir}/results/${concordanceCheckId}.ConcordanceCheckVersion"
-	echo "Finished"
-	if [[ -e "/groups/${GROUP}/${TMP_LFS}/concordance/logs/${concordanceCheckId}.ConcordanceCheck.started" ]]
+
+	if [[ -e "${JOB_CONTROLE_FILE_BASE}.started" ]]
 	then
-		mv "/groups/${GROUP}/${TMP_LFS}/concordance/logs/${concordanceCheckId}.ConcordanceCheck."{started,finished}
+		mv "${JOB_CONTROLE_FILE_BASE}."{started,finished}
 	else
-		touch "/groups/${GROUP}/${TMP_LFS}/concordance/logs/${concordanceCheckId}.ConcordanceCheck.finished"
+		touch "${JOB_CONTROLE_FILE_BASE}.finished"
 	fi
 
-	mv "${concordanceDir}/jobs/${concordanceCheckId}.sh."{started,finished}
+	mv "${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.sh."{started,finished}
 EOH
 	fi
-	
-	if [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}.sh.started" ]] && [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}.sh.finished" ]]
+
+	if [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.sh.started" ]] && [[ ! -f "${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.sh.finished" ]]
 	then
-		cd "${concordanceDir}/jobs/"
+		cd "${concordanceDir}/jobs/${concordanceCheckId}"
 		sbatch "${concordanceCheckId}.sh"
+		sleep 3
 		touch "${concordanceCheckId}.sh.started"
 		cd -
 	fi
 done < <(find "${concordanceDir}/samplesheets/" -maxdepth 1 -type f -iname "*sampleId.txt")
+
+# Clean exit.
+#
+log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Finished successfully."
 trap - EXIT
 exit 0
-

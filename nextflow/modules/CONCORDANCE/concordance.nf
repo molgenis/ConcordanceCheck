@@ -15,15 +15,15 @@ process CONCORDANCE {
 
     vcf1 = "${files[0]}"
     vcf2 = "${files[1]}"
-    sampleFile="${id}_${meta[0].dataId}_${meta[1].dataId}.sample"
-    variantFile="${id}_${meta[0].dataId}_${meta[1].dataId}.variants"
+    sampleFile="${meta[0].fileprefix}.sample"
+    variantFile="${meta[0].fileprefix}.variants"
 
     template 'concordance.sh'
 
     stub:
 
-    sampleFile="${id}_${meta[0].dataId}_${meta[1].dataId}.sample"
-    variantFile="${id}_${meta[0].dataId}_${meta[1].dataId}.variants"
+    sampleFile="${meta[0].fileprefix}.sample"
+    variantFile="${meta[0].fileprefix}.variants"
     """
     touch "${sampleFile}"
     touch "${variantFile}"

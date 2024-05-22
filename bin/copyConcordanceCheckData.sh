@@ -223,15 +223,18 @@ else
 		#
 		filePrefix=$(basename "${sampleSheet%.sampleId.txt}")
 		log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Processing run ${filePrefix} ..."
-		# shellcheck disable=SC2029
-		ngsVcfId=$(ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "awk '{if (NR>1){print \$2}}' \"${sampleSheet}\"")
-		# shellcheck disable=SC2029
-		if ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" test -e "${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/logs/${filePrefix}.ConcordanceCheck.finished"
+		controlFileBase="${PRM_ROOT_DIR}/logs/concordance/"
+		export JOB_CONTROLE_FILE_BASE="${controlFileBase}/${filePrefix}.${SCRIPT_NAME}"
+		# shellcheck disable=SC2174
+		mkdir -m 2770 -p "${controlFileBase}"
+		
+		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "checking if exist: ${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/logs/${filePrefix}/${filePrefix}.ConcordanceCheck.finished" 
+		if ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" test -e "${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/logs/${filePrefix}/${filePrefix}.ConcordanceCheck.finished"
 		then
-			touch "${PRM_ROOT_DIR}/concordance/logs/${filePrefix}.copyConcordanceCheckData.started"
+			log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/logs/${filePrefix}/${filePrefix}.ConcordanceCheck.finished"
+			touch "${JOB_CONTROLE_FILE_BASE}.started"
 			rsync -av "${DATA_MANAGER}@${HOSTNAME_TMP}:/${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/results/${filePrefix}.*" "${PRM_ROOT_DIR}/concordance/results/" 
-			log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "removing ${PRM_ROOT_DIR}/concordance/ngs/${ngsVcfId}.final.vcf.gz"
-			rm -f "${PRM_ROOT_DIR}/concordance/ngs/${ngsVcfId}.final.vcf.gz"
+			log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Copied ${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/results/${filePrefix}.*"
 			cd "/groups/${group}/${DAT_LFS}/ConcordanceCheckOutput/"
 			windowsPathDelimeter="\\"
 			#
@@ -244,7 +247,8 @@ else
 			done < <(find "${PRM_ROOT_DIR}/concordance/results/" -maxdepth 1 -type f -iname "${filePrefix}.*")
 			# shellcheck disable=SC2029
 			ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "mv \"${sampleSheet}\" \"${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/archive/\""
-			mv "${PRM_ROOT_DIR}/concordance/logs/${filePrefix}.copyConcordanceCheckData."{started,finished}
+			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "moved: ${JOB_CONTROLE_FILE_BASE}.{started,finished}"
+			mv "${JOB_CONTROLE_FILE_BASE}."{started,finished}
 
 		else
 			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "concordanceCheck for ${filePrefix} not finished (yet)"

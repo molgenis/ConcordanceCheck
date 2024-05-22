@@ -23,14 +23,18 @@ def split_samples( row ) {
     def sample1Metadata = [ "processStepId": row.processStepId,
     "dataId": row.data1Id,
     "build": row.build1,
+    "project": row.project1,
     "fileType": row.fileType1,
+    "fileprefix": row.fileprefix,
     "liftover": check_liftover(row.build1, row),
     "file": file(row.location1)]
 
     def sample2Metadata = [ "processStepId": row.processStepId,
     "dataId": row.data2Id,
     "build": row.build2,
+    "project": row.project2,
     "fileType": row.fileType2,
+    "fileprefix": row.fileprefix,
     "liftover": check_liftover(row.build2, row),
     "file": file(row.location2)]
 

@@ -12,7 +12,7 @@ fi
 set -e # Exit if any subcommand or pipeline returns a non-zero exit status.
 set -u # Raise exception if variable is unbound. Combined with set -e will halt execution when an unbound variable is encountered.
 
-umask 0027
+umask 0027 
 
 # Env vars.
 export TMPDIR="${TMPDIR:-/tmp}" # Default to /tmp if $TMPDIR was not defined.
@@ -78,7 +78,7 @@ EOH
 	exit 0
 }
 
-fetch () {	
+fetch () {
 # gets a sampleId, a extention and searchPatch and reruns the filename, full filepath. 
 local _sample="$1"
 local _extention="$2"
@@ -89,19 +89,16 @@ local _searchPath="$3"
 		mapfile -t _files < <(find "${_searchPath}" -maxdepth 1 -name "*${_sample}*${_extention}" )
 		if [[ "${#_files[@]}" -eq '0' ]]
 		then
-			log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "${_searchPath}/*${_sample}*${_extention} NOT FOUND! skipped"
-			continue
+			_filePath="not found"
 		else
-			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Found back  ${_files[0]}"
 			_filePath="${_files[0]}"
 		fi
 	else
-		log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "${_searchPath} NOT FOUND! skipped"
-		continue
+		_filePath="not found"
 	fi	
 
-#return _sampleId and _filePath
-return "${_filePath}"
+#return _filePath
+echo "${_filePath}"
 
 }
 
@@ -113,7 +110,7 @@ fetch_data () {
 	local _fileType=""
 	local _sampleId=""
 
-	local _prefix=$(echo "${_project}" | awk -F '_' 'print $1') 
+	local _prefix=$(echo "${_project}" | awk -F '_' '{print $1}') 
 
 	if [[ "${_prefix}" =~ ^(NGS|NGSR|QXTR|XHTS|MAGR|QXT|HSR|GS)$ ]] && [[ "${_type}" == "DNA" ]]
 	then
@@ -135,18 +132,17 @@ fetch_data () {
 			_sampleId=$(basename "${_filePath}" ".merged.dedup.bam.cram")
 			_fileType='CRAM'
 		else
-			log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "VCF not found, CRAM not found."
+			log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "concordanceCheckSnps VCF not found, CRAM not found."
 		fi
 	elif [[ "$_project" == "GS_"* ]] && [[ "${_type}" == "RNA" ]]
 	then
-	
 		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/variants/concordance/")
 		#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
 		_filePath=$(fetch "${_sample}" ".concordance.vcf.gz" "${_searchPath}")
 		_sampleId=$(basename "${_filePath}" ".concordance.vcf.gz")
 		_fileType='VCF'
 	
-	elif [[ "${_project}" == "APAR_"* ]]
+	elif [[ "${_project}" == "OPAR_"* ]]
 	then
 		_searchPath=("/groups/${ARRAYGROUP}/dat0"*"/openarray/"*"${_project}"*"/")
 
@@ -164,10 +160,14 @@ fetch_data () {
 		_sampleId=$(basename "${_filePath}" ".cram")
 		_fileType='CRAM'
 	else
-		log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The project folder 	${_project} ${_sample} ${_type} cannot be found anywhere."
+		log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The project folder 	${_project} ${_sample} ${_type} cannot be found anywhere."
 	fi
 
-	echo "${_sampleId} ${_project} ${_filePath} ${_fileType}"
+	# store what could be found back.
+	return_array["sampleId"]="${_sampleId}"
+	return_array["project"]="${_project}"
+	return_array["fileType"]="${_fileType}"
+	return_array["filePath"]="${_filePath}"
 }
 
 #
@@ -263,7 +263,7 @@ fi
 # shellcheck disable=SC2029
 ## ervanuit gaande dat de filename samplename.txt heet, 
 #  example filename: processStepID_project1_sample1_project2_sample2.csv
-#  example content   658059	HSR_195	DNA12345	DNA	GRCh37	OPAR-12	DNA12345	DNA	GRCh38
+#  example content   658059	HSR_195	DNA12345	DNA	GRCh37	OPAR_12	DNA12345	DNA	GRCh38
 
 #kolom 1: processStepID
 #kolom 2: projectNaam 1
@@ -275,7 +275,7 @@ fi
 #kolom 8: Material 2
 #kolom 9: GenomeBuild 2
 
-#mapfile -t sampleSheetsDarwin < <(find "/groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/Opar" -maxdepth 1 -type f -name '*.csv')
+# source dir for Darwin created jobfiles
 mapfile -t sampleSheetsDarwin < <(find "/groups/${NGSGROUP}/dat06/ConcordanceCheckSamplesheets/Opar" -maxdepth 1 -type f -name '*.csv')
 
 if [[ "${#sampleSheetsDarwin[@]}" -eq '0' ]]
@@ -291,6 +291,7 @@ else
 		samplesheetName="$(basename "${darwinSamplesheet}" ".csv.converted")"
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Processing sample sheet: ${darwinSamplesheet} ..."
 
+		# fetch and map info from correct collumns from jobfile.
 		processStepID=$(awk '{print $1}' "${darwinSamplesheet}")
 		project1=$(awk '{print $2}' "${darwinSamplesheet}")
 		sample1=$(awk '{print $3}' "${darwinSamplesheet}")
@@ -303,21 +304,62 @@ else
 
 		host_prm=$(hostname -s)
 
-		read _sampleId _project _filePath _fileType < <(fetch_data ${project1} ${sample1} ${sampleType1})
-		echo "${_sampleId} ${_project} ${_filePath} ${_fileType}"
+		declare -A return_array
+		# try the fetch FileName, project, fileType,filePaths for sampleId 1
+		fetch_data ${project1} ${sample1} ${sampleType1}
+		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "return from fetch_data for sample ${sample1}: ${return_array[sampleId]}, ${return_array[project]}, ${return_array[fileType]},${return_array[filePath]}"
+		sampleId1="${return_array[sampleId]}"
+		project1="${return_array[project]}"
+		fileType1="${return_array[fileType]}"
+		filePath1="${return_array[filePath]}"
+		
+		# try the fetch FileName, project, fileType,filePaths for sampleId 2
+		fetch_data ${project2} ${sample2} ${sampleType2}
+		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "return from fetch_data for sample ${sample1}: ${return_array[sampleId]}, ${return_array[project]}, ${return_array[fileType]},${return_array[filePath]} "
+		sampleId2="${return_array[sampleId]}"
+		project2="${return_array[project]}"
+		fileType2="${return_array[fileType]}"
+		filePath2="${return_array[filePath]}"
+	
+		# skip jobfile if one of the files can not be found.
+		if [[ "${filePath1}" == 'not found' ]] || [[ "${filePath2}" == 'not found' ]]
+		then
+			log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "One of the files could not be found for sample: ${sample1}, run in TRACE mode check... ${return_array[sampleId]}, ${return_array[project]}, ${return_array[fileType]}, ${return_array[filePath]}"
+			continue
+		else
 
-		#rsync data to tmp
-#		rsync -av "${arrayVcf[0]}" "${HOSTNAME_TMP}:/groups/${GROUP}/${TMP_LFS}/concordance/array/"
-#		rsync -av "${ngsVcf[0]}" "${HOSTNAME_TMP}:/groups/${GROUP}/${TMP_LFS}/concordance/ngs/"
+			#rsync file to /groups/${GROUP}/${TMP_LFS}/concordance/tmp/ on ${HOSTNAME_TMP}
+			rsync -rv "${filePath1}" "${HOSTNAME_TMP}:/groups/${GROUP}/${TMP_LFS}/concordance/tmp/"
+			rsync -rv "${filePath2}" "${HOSTNAME_TMP}:/groups/${GROUP}/${TMP_LFS}/concordance/tmp/"
 
-		# shellcheck disable=SC2029	
-#		ssh "${HOSTNAME_TMP}" "echo -e \"data1Id\tdata2Id\tlocation1\tlocation2\n${arrayId}\t${ngsVcfId}\t${host_prm}:${arrayVcf[0]}\t${host_prm}:${ngsVcf[0]}\" > \"/groups/${GROUP}/${TMP_LFS}/concordance/samplesheets/${samplesheetName}.sampleId.txt\""
-#		log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "samplesheet created on ${HOSTNAME_TMP}: /groups/${GROUP}/${TMP_LFS}/concordance/samplesheets/${samplesheetName}.sampleId.txt"
+			fileTmpDir=/groups/${GROUP}/${TMP_LFS}/concordance/tmp/
+			fileName1="$(basename "${filePath1}")"
+			fileName2="$(basename "${filePath2}")"
+
+			#create concondanceCheck mapping file
+			#filename structure example:
+			
+			#${processStepId}_${project1}_${sampleId1}_${project2}_${sampleId2}.sampleId.txt
+		
+			#Mapping file content example:
+
+			#data1Id	data2Id	location1	location2	fileType1	fileType2	build1	build2	project1	project2	fileprefix	processStepId
+			#${sampleId1}	${sampleId2}	${filePath1}/${sampleId1}.extention	${filePath2}/${sampleId2}.extention	VCF|OPENARRAY|BAM|CRAM	VCF|OPENARRAY|BAM|CRAM	CRCh37|CRCh38	CRCh37|CRCh38	project1	project2	jobfilePrefix	processStepId
+
+			# header and content for mappingfile.	
+			HEADER="data1Id\tdata2Id\tlocation1\tlocation2\tfileType1\tfileType2\tbuild1\tbuild2\tproject1\tproject2\tfileprefix\tprocessStepId"
+			CONTENT="${sampleId1}\t${sampleId2}\t${fileTmpDir}/${fileName1}\t${fileTmpDir}/${fileName2}\t${fileType1}\t${fileType2}\t${genomebuild1}\t${genomebuild2}\t${project1}\t${project2}\t${samplesheetName}\t${processStepID}"
+
+			# create mapping file on "${HOSTNAME_TMP}" in /groups/${GROUP}/${TMP_LFS}/concordance/samplesheets/ to be picked up by the concordance pipeline.
+			# shellcheck disable=SC2029
+			ssh "${HOSTNAME_TMP}" "echo -e \"${HEADER}\n${CONTENT}\" > \"/groups/${GROUP}/${TMP_LFS}/concordance/samplesheets/${samplesheetName}.sampleId.txt\""
+			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "samplesheet created on ${HOSTNAME_TMP}: /groups/${GROUP}/${TMP_LFS}/concordance/samplesheets/${samplesheetName}.sampleId.txt"
 		
 		#copy original darwinSamplesheet to archive and remove the .converted one
-#		log4Bash 'TRACE' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "moving ${darwinSamplesheet%.converted} to /groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/archive/ "
-#		mv -v "${darwinSamplesheet%.converted}" "/groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/archive/"
+		log4Bash 'TRACE' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "moving ${darwinSamplesheet%.converted} to /groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/archive/ "
+		mv -v "${darwinSamplesheet%.converted}" "/groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/archive/"
 #		rm -v "${darwinSamplesheet}"
+		fi
 	done
 fi
 trap - EXIT

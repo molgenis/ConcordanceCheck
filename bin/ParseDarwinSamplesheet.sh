@@ -276,7 +276,8 @@ fi
 #kolom 9: GenomeBuild 2
 
 # source dir for Darwin created jobfiles
-mapfile -t sampleSheetsDarwin < <(find "/groups/${NGSGROUP}/dat06/ConcordanceCheckSamplesheets/Opar" -maxdepth 1 -type f -name '*.csv')
+samplesheetsDir="/groups/${NGSGROUP}/dat06/ConcordanceCheckSamplesheets/Opar"
+mapfile -t sampleSheetsDarwin < <(find "${samplesheetsDir}" -maxdepth 1 -type f -name '*.csv')
 
 if [[ "${#sampleSheetsDarwin[@]}" -eq '0' ]]
 then
@@ -364,7 +365,7 @@ else
 		
 		#copy original darwinSamplesheet to archive and remove the .converted one
 		log4Bash 'TRACE' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "moving ${darwinSamplesheet%.converted} to /groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/archive/ "
-		mv -v "${darwinSamplesheet%.converted}" "/groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/archive/"
+		mv -v "${darwinSamplesheet%.converted}" "${samplesheetsDir}/archive/"
 		rm -f "${JOB_CONTROLE_FILE_BASE}.failed"
 		mv -v "${JOB_CONTROLE_FILE_BASE}".{started,finished}
 #		rm -v "${darwinSamplesheet}"

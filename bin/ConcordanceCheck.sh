@@ -177,7 +177,7 @@ do
 	log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Processing samplesheet ${sampleSheet} ..."
 	filePrefix="$(basename "${sampleSheet}" .sampleId.txt)"
 	concordanceCheckId="${filePrefix}"
-	controlFileBase="${concordanceDir}/logs/concordance/"
+	controlFileBase="/groups/${GROUP}/${TMP_LFS}/logs/concordance/"
 	export JOB_CONTROLE_FILE_BASE="${controlFileBase}/${filePrefix}.${SCRIPT_NAME}"
 	# shellcheck disable=SC2174
 	mkdir -m 2770 -p "${controlFileBase}"

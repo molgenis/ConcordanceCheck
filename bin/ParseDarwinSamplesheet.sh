@@ -80,9 +80,10 @@ EOH
 
 fetch () {
 # gets a sampleId, a extention and searchPatch and reruns the filename, full filepath. 
-local _sample="$1"
-local _extention="$2"
-local _searchPath="$3"
+local _sample="${1}"
+local _extention="${2}"
+local _searchPath="${3}"
+local _filePath=""
 
 	if [[ -e "${_searchPath[0]}" ]]
 	then
@@ -97,13 +98,12 @@ local _searchPath="$3"
 		_filePath="not found"
 	fi	
 
-#return _filePath
+#return found filePath as _filePath, or 'not found in case of missing file.'
 echo "${_filePath}"
-
 }
 
 fetch_data () {
-	local _project="$1"
+	local _project="${1}"
 	local _sample="${2}"
 	local _type="${3}"
 	local _filePath=""
@@ -134,7 +134,7 @@ fetch_data () {
 		else
 			log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "concordanceCheckSnps VCF not found, CRAM not found."
 		fi
-	elif [[ "$_project" == "GS_"* ]] && [[ "${_type}" == "RNA" ]]
+	elif [[ "${_project}" == "GS_"* ]] && [[ "${_type}" == "RNA" ]]
 	then
 		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/variants/concordance/")
 		#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
@@ -293,7 +293,7 @@ else
 		darwinSamplesheet="${darwinSamplesheet}.converted"
 		samplesheetName="$(basename "${darwinSamplesheet}" ".csv.converted")"
 		export JOB_CONTROLE_FILE_BASE="${controlFileBase}/${samplesheetName}.${SCRIPT_NAME}"
-		sudo -u "${DATA_MANAGER}" -c touch "${JOB_CONTROLE_FILE_BASE}.started"
+		touch "${JOB_CONTROLE_FILE_BASE}.started"
 
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Processing sample sheet: ${darwinSamplesheet} ..."
 
@@ -374,5 +374,3 @@ else
 fi
 trap - EXIT
 exit 0
-
-

@@ -83,11 +83,12 @@ fetch () {
 local _sample="${1}"
 local _extention="${2}"
 local _searchPath="${3}"
+local _seperator='_'
 local _filePath=""
 
 	if [[ -e "${_searchPath[0]}" ]]
 	then
-		mapfile -t _files < <(find "${_searchPath}" -maxdepth 1 -name "*${_sample}*${_extention}" )
+		mapfile -t _files < <(find "${_searchPath}" -maxdepth 1 -regex ".*${_sample}.*${_extention}" )
 		if [[ "${#_files[@]}" -eq '0' ]]
 		then
 			_filePath="not found"
@@ -128,9 +129,15 @@ fetch_data () {
 			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
 			
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
-			_filePath=$(fetch "${_sample}" ".merged.dedup.bam.cram" "${_searchPath}")
+			_filePath=$(fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath}")
 			_sampleId=$(basename "${_filePath}" ".merged.dedup.bam.cram")
-			_fileType='CRAM'
+			_sampleId=$(basename "${_sampleId}" ".merged.dedup.bam")
+			if [[ "${_filePath}" == *"cram"* ]]
+			then
+				_fileType='CRAM'
+			else
+				_fileType='BAM'
+			fi
 		else
 			log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "concordanceCheckSnps VCF not found, CRAM not found."
 		fi
@@ -337,10 +344,10 @@ else
 		else
 
 			#rsync file to /groups/${GROUP}/${TMP_LFS}/concordance/tmp/ on ${HOSTNAME_TMP}
-			rsync -rv "${filePath1}" "${HOSTNAME_TMP}:/groups/${GROUP}/${TMP_LFS}/concordance/tmp/"
-			rsync -rv "${filePath2}" "${HOSTNAME_TMP}:/groups/${GROUP}/${TMP_LFS}/concordance/tmp/"
+			rsync -rv "${filePath1}" "${HOSTNAME_TMP}:/groups/${GROUP}/${TMP_LFS}/concordance/ngs/"
+			rsync -rv "${filePath2}" "${HOSTNAME_TMP}:/groups/${GROUP}/${TMP_LFS}/concordance/ngs/"
 
-			fileTmpDir="/groups/${GROUP}/${TMP_LFS}/concordance/tmp/"
+			fileTmpDir="/groups/${GROUP}/${TMP_LFS}/concordance/ngs/"
 			fileName1="$(basename "${filePath1}")"
 			fileName2="$(basename "${filePath2}")"
 
@@ -368,7 +375,7 @@ else
 		mv -v "${darwinSamplesheet%.converted}" "${samplesheetsDir}/archive/"
 		rm -f "${JOB_CONTROLE_FILE_BASE}.failed"
 		mv -v "${JOB_CONTROLE_FILE_BASE}".{started,finished}
-#		rm -v "${darwinSamplesheet}"
+		rm -v "${darwinSamplesheet}"
 		fi
 	done
 fi

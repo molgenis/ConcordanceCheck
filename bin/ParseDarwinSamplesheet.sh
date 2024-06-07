@@ -83,7 +83,6 @@ fetch () {
 local _sample="${1}"
 local _extention="${2}"
 local _searchPath="${3}"
-local _seperator='_'
 local _filePath=""
 
 	if [[ -e "${_searchPath[0]}" ]]
@@ -160,7 +159,7 @@ fetch_data () {
 
 	elif [[ "${_project}" == "LRS_"* ]]
 	then
-		arrayPath=("/groups/${NGSGROUP}/prm0"*"/project/"*"${_project}"*"/run01/results/alignments/")
+		arrayPath=("/groups/${NGSGROUP}/prm0"*"/project/"*"${_project}"*"/run01/results/intermediates/")
 
 		#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to OA
 		_filePath=$(fetch "${_sample}" ".cram" "${_searchPath}")

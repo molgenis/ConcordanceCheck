@@ -200,9 +200,9 @@ cat << EOH > "${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}
 #SBATCH --job-name=Concordance_${concordanceCheckId}
 #SBATCH --output=${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.out
 #SBATCH --error=${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.err
-#SBATCH --time=00:30:00
+#SBATCH --time=00:10:00
 #SBATCH --cpus-per-task 1
-#SBATCH --mem 6gb
+#SBATCH --mem 1gb
 #SBATCH --open-mode=append
 #SBATCH --export=NONE
 #SBATCH --get-user-env=60L
@@ -266,7 +266,7 @@ EOH
 	then
 		cd "${concordanceDir}/jobs/${concordanceCheckId}"
 		sbatch "${concordanceCheckId}.sh"
-		sleep 3
+		sleep 5
 		touch "${concordanceCheckId}.sh.started"
 		cd -
 	fi

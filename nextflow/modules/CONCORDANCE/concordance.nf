@@ -6,7 +6,7 @@ process CONCORDANCE {
     publishDir "$params.output", mode: 'copy', overwrite: true
 
     input:
-    tuple val(id), val(meta), val(files)
+    tuple val(id), val(meta), path(files)
 
     output:
     tuple val(meta), path(sampleFile), path(variantFile)

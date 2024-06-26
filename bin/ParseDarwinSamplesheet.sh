@@ -112,7 +112,7 @@ fetch_data () {
 
 	local _prefix="" 
 	_prefix=$(echo "${_project}" | awk -F '_' '{print $1}')
-	
+
 	if [[ "${_prefix}" =~ ^(NGS|NGSR|QXTR|XHTS|MAGR|QXT|HSR|GS)$ ]] && [[ "${_type}" =~ ^(WES|WGS	)$ ]]
 	then
 		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/concordanceCheckSnps/")
@@ -334,8 +334,6 @@ else
 		sample2=$(awk '{print $7}' "${darwinSamplesheet}")
 		sampleType2=$(awk '{print $8}' "${darwinSamplesheet}")
 		genomebuild2=$(awk '{print $9}' "${darwinSamplesheet}")
-
-		host_prm=$(hostname -s)
 
 		declare -A return_array
 		# try the fetch FileName, project, fileType,filePaths for sampleId 1

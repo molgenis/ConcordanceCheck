@@ -37,3 +37,11 @@ set -eu
 	--sampleMap "${mappingfile}" \
 	-o "!{meta[0].fileprefix}" \
 	-sva
+
+	if [[ $(wc -l <"!{meta[0].fileprefix}.sample") -n 2 ]]
+	then
+		echo "something when wrong during concordance check."
+		exit 1
+	else
+		echo "concordance check done."
+	fi

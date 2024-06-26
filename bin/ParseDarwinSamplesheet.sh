@@ -87,7 +87,7 @@ local _filePath=""
 
 	if [[ -e "${_searchPath[0]}" ]]
 	then
-		mapfile -t _files < <(find "${_searchPath}" -maxdepth 1 -regex ".*${_sample}.*${_extention}" )
+		mapfile -t _files < <(find "${_searchPath}" -maxdepth 1 -regex "${_searchPath}.*${_sample}.*${_extention}" )
 		if [[ "${#_files[@]}" -eq '0' ]]
 		then
 			_filePath="not found"
@@ -112,7 +112,7 @@ fetch_data () {
 
 	local _prefix=$(echo "${_project}" | awk -F '_' '{print $1}') 
 
-	if [[ "${_prefix}" =~ ^(NGS|NGSR|QXTR|XHTS|MAGR|QXT|HSR|GS)$ ]] && [[ "${_type}" == "DNA" ]]
+	if [[ "${_prefix}" =~ ^(NGS|NGSR|QXTR|XHTS|MAGR|QXT|HSR|GS)$ ]] && [[ "${_type}" =~ ^(WES|WGS)$ ]]
 	then
 		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/concordanceCheckSnps/")
 		if [[ -e "${_searchPath[0]}" ]]
@@ -140,14 +140,30 @@ fetch_data () {
 		else
 			log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "concordanceCheckSnps VCF not found, CRAM not found."
 		fi
-	elif [[ "${_project}" == "GS_"* ]] && [[ "${_type}" == "RNA" ]]
+	elif [[ "${_project}" == "GS_"* ]] && [[ "${_type}" == "RNASeq" ]]
 	then
 		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/variants/concordance/")
-		#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
-		_filePath=$(fetch "${_sample}" ".concordance.vcf.gz" "${_searchPath}")
-		_sampleId=$(basename "${_filePath}" ".concordance.vcf.gz")
-		_fileType='VCF'
-	
+		
+		if [[ -e "${_searchPath[0]}" ]]
+		then
+			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
+			_filePath=$(fetch "${_sample}" ".concordance.vcf.gz" "${_searchPath}")
+			_sampleId=$(basename "${_filePath}" ".concordance.vcf.gz")
+			_fileType='VCF'
+
+		elif [[ ! -e "${_searchPath[0]}" ]]
+		then
+			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "RNA VCF not found, Try fetching BAM."
+			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
+
+			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
+			_filePath=$(fetch "${_sample}" ".sorted.merged.bam" "${_searchPath}")
+			_sampleId=$(basename "${_filePath}" ".sorted.merged.bam")
+			_fileType='BAM'
+		else
+			log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "concordanceCheckSnps VCF not found, BAM not found for RNA sample."
+		fi
+
 	elif [[ "${_project}" == "OPAR_"* ]]
 	then
 		_searchPath=("/groups/${NGSGROUP}/dat0"*"/openarray/"*"${_project}"*"/")
@@ -157,16 +173,20 @@ fetch_data () {
 		_sampleId=$(basename "${_filePath}" ".oarray.txt")
 		_fileType='OPENARRAY'
 
-	elif [[ "${_project}" == "LRS_"* ]]
+	elif [[ "${_project}" == "NP_"* ]] && [[ "${_type}" == "NANOPORE" ]]
 	then
-		arrayPath=("/groups/${NGSGROUP}/prm0"*"/project/"*"${_project}"*"/run01/results/intermediates/")
+		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/"*"${_project}"*"/run01/results/intermediates/")
 
 		#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to OA
 		_filePath=$(fetch "${_sample}" ".cram" "${_searchPath}")
 		_sampleId=$(basename "${_filePath}" ".cram")
 		_fileType='CRAM'
 	else
-		log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The project folder 	${_project} ${_sample} ${_type} cannot be found anywhere."
+		log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The project folder ${_project} ${_sample} ${_type} cannot be found anywhere."
+		_sampleId='not found'
+		_project='not found'
+		_fileType='not found'
+		_filePath='not found'
 	fi
 
 	# store what could be found back.
@@ -327,7 +347,7 @@ else
 		
 		# try the fetch FileName, project, fileType,filePaths for sampleId 2
 		fetch_data "${project2}" "${sample2}" "${sampleType2}"
-		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "return from fetch_data for sample ${sample1}: ${return_array[sampleId]}, ${return_array[project]}, ${return_array[fileType]},${return_array[filePath]} "
+		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "return from fetch_data for sample ${sample2}: ${return_array[sampleId]}, ${return_array[project]}, ${return_array[fileType]},${return_array[filePath]}"
 		sampleId2="${return_array[sampleId]}"
 		project2="${return_array[project]}"
 		fileType2="${return_array[fileType]}"
@@ -378,5 +398,6 @@ else
 		fi
 	done
 fi
+log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Finished successfully."
 trap - EXIT
 exit 0

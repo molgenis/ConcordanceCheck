@@ -192,7 +192,7 @@ do
 
 		data1Id=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $1}')
 		data2Id=$(sed 1d "${sampleSheet}" | awk 'BEGIN {FS="\t"}{print $2}')
-		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Calculating concordance over ${data1Id} compared to ${data2Id}."
+		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Calculating concordance between ${data1Id} and ${data2Id}."
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Output file name: ${concordanceCheckId}."
 
 cat << EOH > "${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.sh"
@@ -200,7 +200,7 @@ cat << EOH > "${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}
 #SBATCH --job-name=Concordance_${concordanceCheckId}
 #SBATCH --output=${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.out
 #SBATCH --error=${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.err
-#SBATCH --time=00:10:00
+#SBATCH --time=05:59:00
 #SBATCH --cpus-per-task 1
 #SBATCH --mem 1gb
 #SBATCH --open-mode=append
@@ -242,8 +242,9 @@ fi
 	-work-dir "${concordanceDir}/tmp/" \\
 	--output "${concordanceDir}/results/" \\
 	-profile slurm \\
+	-resume \\
 	|| {
-			log4Bash 'TRACE' "${LINENO}" "${FUNCNAME[0]:-main}" "0" " Concordance pipeline crashed. Check ${concordanceDir}/jobs/${concordanceCheckId}.out"
+			log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" "0" " Concordance pipeline crashed. Check ${concordanceDir}/jobs/${concordanceCheckId}.out"
 			tail -50 "${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.out" >> "${JOB_CONTROLE_FILE_BASE}.started"
 			mv -v "${JOB_CONTROLE_FILE_BASE}."{started,failed}
 			exit 1
@@ -266,7 +267,7 @@ EOH
 	then
 		cd "${concordanceDir}/jobs/${concordanceCheckId}"
 		sbatch "${concordanceCheckId}.sh"
-		sleep 5
+		sleep 15
 		touch "${concordanceCheckId}.sh.started"
 		cd -
 	fi

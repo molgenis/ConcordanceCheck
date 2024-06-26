@@ -110,9 +110,10 @@ fetch_data () {
 	local _fileType=""
 	local _sampleId=""
 
-	local _prefix=$(echo "${_project}" | awk -F '_' '{print $1}') 
-
-	if [[ "${_prefix}" =~ ^(NGS|NGSR|QXTR|XHTS|MAGR|QXT|HSR|GS)$ ]] && [[ "${_type}" =~ ^(WES|WGS)$ ]]
+	local _prefix="" 
+	_prefix=$(echo "${_project}" | awk -F '_' '{print $1}')
+	
+	if [[ "${_prefix}" =~ ^(NGS|NGSR|QXTR|XHTS|MAGR|QXT|HSR|GS)$ ]] && [[ "${_type}" =~ ^(WES|WGS	)$ ]]
 	then
 		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/concordanceCheckSnps/")
 		if [[ -e "${_searchPath[0]}" ]]

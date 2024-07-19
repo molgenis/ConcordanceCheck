@@ -118,8 +118,8 @@ fetch_data () {
 		if [[ -d "${_searchPath}" ]]
 		then
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
-			_filePath=$(fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath}")
-			_sampleId=$(basename "${_filePath}" ".concordanceCheckCalls.vcf")
+			_filePath="$(fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath}")" 
+			_sampleId="$(basename "${_filePath}" ".concordanceCheckCalls.vcf")"
 			_fileType='VCF'
 
 		elif [[ ! -d "${_searchPath}" ]]
@@ -128,9 +128,9 @@ fetch_data () {
 			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
 			
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
-			_filePath=$(fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath}")
-			_sampleId=$(basename "${_filePath}" ".merged.dedup.bam.cram")
-			_sampleId=$(basename "${_sampleId}" ".merged.dedup.bam")
+			_filePath="$(fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath}")"
+			_sampleId="$(basename "${_filePath}" ".merged.dedup.bam.cram")"
+			_sampleId="$(basename "${_sampleId}" ".merged.dedup.bam")"
 			if [[ "${_filePath}" == *"cram"* ]]
 			then
 				_fileType='CRAM'
@@ -147,8 +147,8 @@ fetch_data () {
 		if [[ -d "${_searchPath}" ]]
 		then
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
-			_filePath=$(fetch "${_sample}" ".concordance.vcf.gz" "${_searchPath}")
-			_sampleId=$(basename "${_filePath}" ".concordance.vcf.gz")
+			_filePath="$(fetch "${_sample}" ".concordance.vcf.gz" "${_searchPath}")" || exit
+			_sampleId="$(basename "${_filePath}" ".concordance.vcf.gz")"
 			_fileType='VCF'
 
 		elif [[ ! -d "${_searchPath}" ]]
@@ -157,8 +157,8 @@ fetch_data () {
 			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
 
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
-			_filePath=$(fetch "${_sample}" ".sorted.merged.bam" "${_searchPath}")
-			_sampleId=$(basename "${_filePath}" ".sorted.merged.bam")
+			_filePath="$(fetch "${_sample}" ".sorted.merged.bam" "${_searchPath}")"
+			_sampleId="$(basename "${_filePath}" ".sorted.merged.bam")"
 			_fileType='BAM'
 		else
 			log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "concordanceCheckSnps VCF not found, BAM not found for RNA sample."
@@ -169,8 +169,8 @@ fetch_data () {
 		_searchPath=("/groups/${NGSGROUP}/dat0"*"/openarray/"*"${_project}"*"/")
 
 		#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to OA
-		_filePath=$(fetch "${_sample}" ".oarray.txt" "${_searchPath}")
-		_sampleId=$(basename "${_filePath}" ".oarray.txt")
+		_filePath="$(fetch "${_sample}" ".oarray.txt" "${_searchPath}")" 
+		_sampleId="$(basename "${_filePath}" ".oarray.txt")"
 		_fileType='OPENARRAY'
 
 	elif [[ "${_project}" == "NP_"* ]] && [[ "${_type}" == "NANOPORE" ]]
@@ -178,8 +178,8 @@ fetch_data () {
 		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/"*"${_project}"*"/run01/results/intermediates/")
 
 		#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to OA
-		_filePath=$(fetch "${_sample}" ".cram" "${_searchPath}")
-		_sampleId=$(basename "${_filePath}" ".cram")
+		_filePath="$(fetch "${_sample}" ".cram" "${_searchPath}")"
+		_sampleId="$(basename "${_filePath}" ".cram")"
 		_fileType='CRAM'
 	else
 		log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The project folder ${_project} ${_sample} ${_type} cannot be found anywhere."

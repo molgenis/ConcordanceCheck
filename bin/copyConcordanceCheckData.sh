@@ -228,10 +228,10 @@ else
 		# shellcheck disable=SC2174
 		mkdir -m 2770 -p "${controlFileBase}"
 		
-		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "checking if exist: ${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/logs/${filePrefix}/${filePrefix}.ConcordanceCheck.finished" 
-		if ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" test -e "${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/logs/${filePrefix}/${filePrefix}.ConcordanceCheck.finished"
+		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "checking if exist: ${TMP_ROOT_DIAGNOSTICS_DIR}/logs/concordance/${filePrefix}.ConcordanceCheck.finished" 
+		if ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" test -e "${TMP_ROOT_DIAGNOSTICS_DIR}/logs/concordance/${filePrefix}.ConcordanceCheck.finished"
 		then
-			log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/logs/${filePrefix}/${filePrefix}.ConcordanceCheck.finished"
+			log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "${TMP_ROOT_DIAGNOSTICS_DIR}/logs/concordance/${filePrefix}.ConcordanceCheck.finished"
 			touch "${JOB_CONTROLE_FILE_BASE}.started"
 			rsync -av "${DATA_MANAGER}@${HOSTNAME_TMP}:/${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/results/${filePrefix}.*" "${PRM_ROOT_DIR}/concordance/results/" 
 			log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Copied ${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/results/${filePrefix}.*"
@@ -248,7 +248,7 @@ else
 			# shellcheck disable=SC2029
 			ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "mv \"${sampleSheet}\" \"${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/archive/\""
 			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "moved: ${JOB_CONTROLE_FILE_BASE}.{started,finished}"
-			mv "${JOB_CONTROLE_FILE_BASE}."{started,finished}
+			mv -v "${JOB_CONTROLE_FILE_BASE}."{started,finished}
 
 		else
 			log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "concordanceCheck for ${filePrefix} not finished (yet)"

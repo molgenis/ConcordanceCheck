@@ -118,7 +118,7 @@ fetch_data () {
 		if [[ -d "${_searchPath}" ]]
 		then
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
-			_filePath="$(fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath}")" 
+			_filePath="$(fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath}")" || exit
 			_sampleId="$(basename "${_filePath}" ".concordanceCheckCalls.vcf")"
 			_fileType='VCF'
 
@@ -128,7 +128,7 @@ fetch_data () {
 			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
 			
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
-			_filePath="$(fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath}")"
+			_filePath="$(fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath}")" || exit
 			_sampleId="$(basename "${_filePath}" ".merged.dedup.bam.cram")"
 			_sampleId="$(basename "${_sampleId}" ".merged.dedup.bam")"
 			if [[ "${_filePath}" == *"cram"* ]]
@@ -157,7 +157,7 @@ fetch_data () {
 			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
 
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
-			_filePath="$(fetch "${_sample}" ".sorted.merged.bam" "${_searchPath}")"
+			_filePath="$(fetch "${_sample}" ".sorted.merged.bam" "${_searchPath}")" || exit
 			_sampleId="$(basename "${_filePath}" ".sorted.merged.bam")"
 			_fileType='BAM'
 		else
@@ -169,7 +169,7 @@ fetch_data () {
 		_searchPath=("/groups/${NGSGROUP}/dat0"*"/openarray/"*"${_project}"*"/")
 
 		#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to OA
-		_filePath="$(fetch "${_sample}" ".oarray.txt" "${_searchPath}")" 
+		_filePath="$(fetch "${_sample}" ".oarray.txt" "${_searchPath}")" || exit
 		_sampleId="$(basename "${_filePath}" ".oarray.txt")"
 		_fileType='OPENARRAY'
 
@@ -178,7 +178,7 @@ fetch_data () {
 		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/"*"${_project}"*"/run01/results/intermediates/")
 
 		#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to OA
-		_filePath="$(fetch "${_sample}" ".cram" "${_searchPath}")"
+		_filePath="$(fetch "${_sample}" ".cram" "${_searchPath}")" || exit
 		_sampleId="$(basename "${_filePath}" ".cram")"
 		_fileType='CRAM'
 	else

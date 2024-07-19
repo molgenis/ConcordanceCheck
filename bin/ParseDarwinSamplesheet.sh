@@ -118,7 +118,7 @@ fetch_data () {
 		if [[ -e "${_searchPath[0]}" ]]
 		then
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
-			_filePath="$(fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath[0]}")"
+			_filePath="$(set -e; fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath[0]}")"
 			_sampleId="$(basename "${_filePath}" ".concordanceCheckCalls.vcf")"
 			_fileType='VCF'
 

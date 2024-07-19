@@ -27,7 +27,7 @@ set -o pipefail
 
 	#check if reheadering is needed.
 	sampleName=$(bcftools query -l "!{sampleId}.called.sorted.vcf.gz")
-	if [[ ${sampleName} != !{sampleId} ]]
+	if [[ "${sampleName}" != "!{sampleId}" ]]
 	then
 		echo "Reheadering. Replace ${sampleName} for !{sampleId}."
 		echo -e "${sampleName} !{sampleId}" > rename.txt

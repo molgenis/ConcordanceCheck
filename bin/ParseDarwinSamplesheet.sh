@@ -2,7 +2,6 @@
 
 # executed by the umcg-gd-ateambot, part of the ConcordanceCheck.
 
-
 if [[ "${BASH_VERSINFO[0]}" -lt 4 ]]
 then
 	echo "Sorry, you need at least bash 4.x to use ${0}." >&2
@@ -12,7 +11,7 @@ fi
 set -e # Exit if any subcommand or pipeline returns a non-zero exit status.
 set -u # Raise exception if variable is unbound. Combined with set -e will halt execution when an unbound variable is encountered.
 
-umask 0027 
+umask 0027
 
 # Env vars.
 export TMPDIR="${TMPDIR:-/tmp}" # Default to /tmp if $TMPDIR was not defined.
@@ -96,7 +95,7 @@ local _filePath=""
 		fi
 	else
 		_filePath="not found"
-	fi	
+	fi
 
 #return found filePath as _filePath, or 'not found in case of missing file.'
 echo "${_filePath}"
@@ -110,20 +109,20 @@ fetch_data () {
 	local _fileType=""
 	local _sampleId=""
 
-	local _prefix="" 
+	local _prefix=""
 	_prefix=$(echo "${_project}" | awk -F '_' '{print $1}')
 
-	if [[ "${_prefix}" =~ ^(NGS|NGSR|QXTR|XHTS|MAGR|QXT|HSR|GS)$ ]] && [[ "${_type}" =~ ^(WES|WGS	)$ ]]
+	if [[ "${_prefix}" =~ ^(NGS|NGSR|QXTR|XHTS|MAGR|QXT|HSR|GS)$ ]] && [[ "${_type}" =~ ^(WES|WGS)$ ]]
 	then
 		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/concordanceCheckSnps/")
-		if [[ -e "${_searchPath[0]}" ]]
+		if [[ -d "${_searchPath}" ]]
 		then
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
 			_filePath=$(fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath}")
 			_sampleId=$(basename "${_filePath}" ".concordanceCheckCalls.vcf")
 			_fileType='VCF'
 
-		elif [[ ! -e "${_searchPath[0]}" ]]
+		elif [[ ! -d "${_searchPath}" ]]
 		then
 			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "VCF not found, Try fetching CRAM."
 			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
@@ -144,15 +143,15 @@ fetch_data () {
 	elif [[ "${_project}" == "GS_"* ]] && [[ "${_type}" == "RNASeq" ]]
 	then
 		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/variants/concordance/")
-		
-		if [[ -e "${_searchPath[0]}" ]]
+
+		if [[ -d "${_searchPath}" ]]
 		then
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
 			_filePath=$(fetch "${_sample}" ".concordance.vcf.gz" "${_searchPath}")
 			_sampleId=$(basename "${_filePath}" ".concordance.vcf.gz")
 			_fileType='VCF'
 
-		elif [[ ! -e "${_searchPath[0]}" ]]
+		elif [[ ! -d "${_searchPath}" ]]
 		then
 			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "RNA VCF not found, Try fetching BAM."
 			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
@@ -294,7 +293,7 @@ fi
 
 #kolom 1: processStepID
 #kolom 2: projectNaam 1
-#kolom 3: DNA nummer 2 
+#kolom 3: DNA nummer 1
 #kolom 4: Material 1
 #kolom 5: GenomeBuild 1
 #kolom 6: projectNaam 2

@@ -145,14 +145,14 @@ fetch_data () {
 		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/variants/concordance/")
 
 
-		if [[ -d "${_searchPath}" ]]
+		if [[ -d "${_searchPath[0]}" ]]
 		then
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
 			_filePath="$(fetch "${_sample}" ".concordance.vcf.gz" "${_searchPath[0]}")" || exit
 			_sampleId="$(basename "${_filePath}" ".concordance.vcf.gz")"
 			_fileType='VCF'
 
-		elif [[ ! -d "${_searchPath}" ]]
+		elif [[ ! -d "${_searchPath[0]}" ]]
 		then
 			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "RNA VCF not found, Try fetching BAM."
 			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")

@@ -114,7 +114,7 @@ fetch_data () {
 
 	if [[ "${_prefix}" =~ ^(NGS|NGSR|QXTR|XHTS|MAGR|QXT|HSR|GS)$ ]] && [[ "${_type}" =~ ^(WES|WGS)$ ]]
 	then
-		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/concordanceCheckSnps/")
+		_searchPath="/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/concordanceCheckSnps/"
 		if [[ -d "${_searchPath}" ]]
 		then
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
@@ -125,7 +125,7 @@ fetch_data () {
 		elif [[ ! -d "${_searchPath}" ]]
 		then
 			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "VCF not found, Try fetching CRAM."
-			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
+			_searchPath="/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/"
 			
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
 			_filePath="$(fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath}")" || exit
@@ -142,7 +142,8 @@ fetch_data () {
 		fi
 	elif [[ "${_project}" == "GS_"* ]] && [[ "${_type}" == "RNASeq" ]]
 	then
-		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/variants/concordance/")
+		_searchPath="/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/variants/concordance/"
+
 
 		if [[ -d "${_searchPath}" ]]
 		then
@@ -154,7 +155,7 @@ fetch_data () {
 		elif [[ ! -d "${_searchPath}" ]]
 		then
 			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "RNA VCF not found, Try fetching BAM."
-			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
+			_searchPath="/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/"
 
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
 			_filePath="$(fetch "${_sample}" ".sorted.merged.bam" "${_searchPath}")" || exit
@@ -166,7 +167,7 @@ fetch_data () {
 
 	elif [[ "${_project}" == "OPAR_"* ]]
 	then
-		_searchPath=("/groups/${NGSGROUP}/dat0"*"/openarray/"*"${_project}"*"/")
+		_searchPath="/groups/${NGSGROUP}/dat0"*"/openarray/"*"${_project}"*"/"
 
 		#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to OA
 		_filePath="$(fetch "${_sample}" ".oarray.txt" "${_searchPath}")" || exit
@@ -175,7 +176,7 @@ fetch_data () {
 
 	elif [[ "${_project}" == "NP_"* ]] && [[ "${_type}" == "NANOPORE" ]]
 	then
-		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/"*"${_project}"*"/run01/results/intermediates/")
+		_searchPath="/groups/${NGSGROUP}/prm0"*"/projects/"*"${_project}"*"/run01/results/intermediates/"
 
 		#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to OA
 		_filePath="$(fetch "${_sample}" ".cram" "${_searchPath}")" || exit

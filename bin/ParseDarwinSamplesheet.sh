@@ -115,7 +115,7 @@ fetch_data () {
 	if [[ "${_prefix}" =~ ^(NGS|NGSR|QXTR|XHTS|MAGR|QXT|HSR|GS)$ ]] && [[ "${_type}" =~ ^(WES|WGS)$ ]]
 	then
 		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/concordanceCheckSnps/")
-		if [[ -d "${_searchPath}" ]]
+		if [[ -d "${_searchPath[0]}" ]]
 		then
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
 			_filePath="$(fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath}")" || exit

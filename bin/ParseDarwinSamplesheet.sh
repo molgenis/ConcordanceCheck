@@ -127,7 +127,7 @@ fetch_data () {
 		then
 			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "VCF not found, Try fetching CRAM."
 			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
-			
+
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
 			_filePath="$(set -e; fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath[0]}")"
 			_sampleId="$(basename "${_filePath}" ".merged.dedup.bam.cram")"
@@ -289,7 +289,7 @@ then
 fi
 
 # shellcheck disable=SC2029
-## ervanuit gaande dat de filename samplename.txt heet, 
+## ervanuit gaande dat de filename samplename.txt heet,
 #  example filename: processStepID_project1_sample1_project2_sample2.csv
 #  example content   658059	HSR_195	DNA12345	DNA	GRCh37	OPAR_12	DNA12345	DNA	GRCh38
 
@@ -299,7 +299,7 @@ fi
 #kolom 4: Material 1
 #kolom 5: GenomeBuild 1
 #kolom 6: projectNaam 2
-#kolom 7: DNA nummer 2 
+#kolom 7: DNA nummer 2
 #kolom 8: Material 2
 #kolom 9: GenomeBuild 2
 
@@ -344,7 +344,7 @@ else
 		project1="${return_array[project]}"
 		fileType1="${return_array[fileType]}"
 		filePath1="${return_array[filePath]}"
-		
+
 		# try the fetch FileName, project, fileType,filePaths for sampleId 2
 		fetch_data "${project2}" "${sample2}" "${sampleType2}"
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "return from fetch_data for sample ${sample2}: ${return_array[sampleId]}, ${return_array[project]}, ${return_array[fileType]},${return_array[filePath]}"
@@ -352,7 +352,7 @@ else
 		project2="${return_array[project]}"
 		fileType2="${return_array[fileType]}"
 		filePath2="${return_array[filePath]}"
-	
+
 		# skip jobfile if one of the files can not be found.
 		if [[ "${filePath1}" == 'not found' ]] || [[ "${filePath2}" == 'not found' ]]
 		then
@@ -372,15 +372,15 @@ else
 
 			#create concondanceCheck mapping file
 			#filename structure example:
-			
+
 			#${processStepId}_${project1}_${sampleId1}_${project2}_${sampleId2}.sampleId.txt
-		
+
 			#Mapping file content example:
 
 			#data1Id	data2Id	location1	location2	fileType1	fileType2	build1	build2	project1	project2	fileprefix	processStepId
 			#${sampleId1}	${sampleId2}	${filePath1}/${sampleId1}.extention	${filePath2}/${sampleId2}.extention	VCF|OPENARRAY|BAM|CRAM	VCF|OPENARRAY|BAM|CRAM	CRCh37|CRCh38	CRCh37|CRCh38	project1	project2	jobfilePrefix	processStepId
 
-			# header and content for mappingfile.	
+			# header and content for mappingfile.
 			HEADER="data1Id\tdata2Id\tlocation1\tlocation2\tfileType1\tfileType2\tbuild1\tbuild2\tproject1\tproject2\tfileprefix\tprocessStepId"
 			CONTENT="${sampleId1}\t${sampleId2}\t${fileTmpDir}/${fileName1}\t${fileTmpDir}/${fileName2}\t${fileType1}\t${fileType2}\t${genomebuild1}\t${genomebuild2}\t${project1}\t${project2}\t${samplesheetName}\t${processStepID}"
 
@@ -388,7 +388,7 @@ else
 			# shellcheck disable=SC2029
 			ssh "${HOSTNAME_TMP}" "echo -e \"${HEADER}\n${CONTENT}\" > \"/groups/${GROUP}/${TMP_LFS}/concordance/samplesheets/${samplesheetName}.sampleId.txt\""
 			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "samplesheet created on ${HOSTNAME_TMP}: /groups/${GROUP}/${TMP_LFS}/concordance/samplesheets/${samplesheetName}.sampleId.txt"
-		
+
 		#copy original darwinSamplesheet to archive and remove the .converted one
 		log4Bash 'TRACE' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "moving ${darwinSamplesheet%.converted} to /groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/archive/ "
 		mv -v "${darwinSamplesheet%.converted}" "${samplesheetsDir}/archive/"

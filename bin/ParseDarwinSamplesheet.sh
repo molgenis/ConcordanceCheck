@@ -2,7 +2,6 @@
 
 # executed by the umcg-gd-ateambot, part of the ConcordanceCheck.
 
-
 if [[ "${BASH_VERSINFO[0]}" -lt 4 ]]
 then
 	echo "Sorry, you need at least bash 4.x to use ${0}." >&2

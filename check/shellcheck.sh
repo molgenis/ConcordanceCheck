@@ -75,6 +75,7 @@ MYDIR="$(cd -P "$(dirname "${0}")" && pwd)"
 #  * Includes sourced files, so the libraries from the lib/ subfolder 
 #    are checked too as long a they are used in at least one script.
 #
+CIRCLECI=true
 if [[ "${CIRCLECI:-}" == true ]]
 then
 	#

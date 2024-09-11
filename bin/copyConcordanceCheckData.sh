@@ -243,7 +243,7 @@ else
 			while IFS= read -r i
 			do
 				fileName=$(basename "${i}")
-				printf '\\\\zkh\\appdata\\medgen\\leucinezipper%s\r\n' "${i//\//${windowsPathDelimeter}}" > "${fileName}"
+				printf "${ISILON_MOUNTPOINT}%s\r\n" "${i//\//${windowsPathDelimeter}}" > "${fileName}"
 			done < <(find "${PRM_ROOT_DIR}/concordance/results/" -maxdepth 1 -type f -iname "${filePrefix}.*")
 			# shellcheck disable=SC2029
 			ssh "${DATA_MANAGER}@${HOSTNAME_TMP}" "mv \"${sampleSheet}\" \"${TMP_ROOT_DIAGNOSTICS_DIR}/concordance/samplesheets/archive/\""

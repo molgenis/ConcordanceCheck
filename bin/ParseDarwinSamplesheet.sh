@@ -363,8 +363,8 @@ else
 		else
 
 			#rsync file to /groups/${GROUP}/${TMP_LFS}/concordance/tmp/ on ${HOSTNAME_TMP}
-			rsync -rv "${filePath1}" "${HOSTNAME_TMP}:/groups/${GROUP}/${TMP_LFS}/concordance/ngs/"
-			rsync -rv "${filePath2}" "${HOSTNAME_TMP}:/groups/${GROUP}/${TMP_LFS}/concordance/ngs/"
+			rsync -av --progress --log-file="${JOB_CONTROLE_FILE_BASE}.started" --chmod='Du=rwx,Dg=rsx,Fu=rw,Fg=r,o-rwx' "${filePath1}" "${HOSTNAME_TMP}:/groups/${GROUP}/${TMP_LFS}/concordance/ngs/"
+			rsync -av --progress --log-file="${JOB_CONTROLE_FILE_BASE}.started" --chmod='Du=rwx,Dg=rsx,Fu=rw,Fg=r,o-rwx' "${filePath2}" "${HOSTNAME_TMP}:/groups/${GROUP}/${TMP_LFS}/concordance/ngs/"
 
 			fileTmpDir="/groups/${GROUP}/${TMP_LFS}/concordance/ngs/"
 			fileName1="$(basename "${filePath1}")"

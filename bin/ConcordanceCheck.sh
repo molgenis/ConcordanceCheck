@@ -250,7 +250,11 @@ fi
 			exit 1
 			}
 
-	echo "${concordanceCheckVersion}" > "${concordanceDir}/results/${concordanceCheckId}.ConcordanceCheckVersion"
+	# Adding concordance pipeline version into .sample file.
+	echo -e "concordanceCheckVersion\n${concordanceCheckVersion}" > "${concordanceDir}/results/${concordanceCheckId}.ConcordanceCheckVersion"
+	paste "${concordanceDir}/results/${concordanceCheckId}.sample" "${concordanceDir}/results/${concordanceCheckId}.ConcordanceCheckVersion" > "${concordanceDir}/results/${concordanceCheckId}.tmp"
+	mv -v "${concordanceDir}/results/${concordanceCheckId}."{tmp,sample}
+	rm "${concordanceDir}/results/${concordanceCheckId}.ConcordanceCheckVersion"
 
 	if [[ -e "${JOB_CONTROLE_FILE_BASE}.started" ]]
 	then

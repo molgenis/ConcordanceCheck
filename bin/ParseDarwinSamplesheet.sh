@@ -48,8 +48,8 @@ function showHelp() {
 ======================================================================================================================
 Scripts to make automatically a samplesheet for the concordance check between ngs and array data and pushes the ngs and 
 array data to the destination machine.
-ngs.vcf should be in /groups/${NGSGROUP}/${PRM_LFS}/concordance/ngs/.
-array.vcf should be in /groups/${ARRAYGROUP}/${PRM_LFS}/concordance/array/.
+ngs projects should be in /groups/${NGSGROUP}/${PRM_LFS}/projects.
+array projects should be in /groups/${ARRAYGROUP}/${PRM_LFS}/openarray/.
 
 
 Usage:
@@ -115,18 +115,11 @@ fetch_data () {
 
 	if [[ "${_prefix}" =~ ^(NGS|NGSR|QXTR|XHTS|MAGR|QXT|HSR|GS)$ ]] && [[ "${_type}" =~ ^(WES|WGS)$ ]]
 	then
-		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/concordanceCheckSnps/")
+		
+		###
+		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
 		if [[ -e "${_searchPath[0]}" ]]
 		then
-			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
-			_filePath="$(set -e; fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath[0]}")"
-			_sampleId="$(basename "${_filePath}" ".concordanceCheckCalls.vcf")"
-			_fileType='VCF'
-
-		elif [[ ! -d "${_searchPath[0]}" ]]
-		then
-			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "VCF not found, Try fetching CRAM."
-			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
 
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
 			_filePath="$(set -e; fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath[0]}")"
@@ -138,13 +131,43 @@ fetch_data () {
 			else
 				_fileType='BAM'
 			fi
+		elif [[ ! -d "${_searchPath[0]}" ]]
+		then
+			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/concordanceCheckSnps/")
+			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
+			_filePath="$(set -e; fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath[0]}")"
+			_sampleId="$(basename "${_filePath}" ".concordanceCheckCalls.vcf")"
+			_fileType='VCF'
+		###
+#		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/concordanceCheckSnps/")
+#		if [[ -e "${_searchPath[0]}" ]]
+#		then
+#			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
+#			_filePath="$(set -e; fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath[0]}")"
+#			_sampleId="$(basename "${_filePath}" ".concordanceCheckCalls.vcf")"
+#			_fileType='VCF'
+
+#		elif [[ ! -d "${_searchPath[0]}" ]]
+#		then
+#			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "VCF not found, Try fetching CRAM."
+#			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
+
+			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
+#			_filePath="$(set -e; fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath[0]}")"
+#			_sampleId="$(basename "${_filePath}" ".merged.dedup.bam.cram")"
+#			_sampleId="$(basename "${_sampleId}" ".merged.dedup.bam")"
+#			if [[ "${_filePath}" == *"cram"* ]]
+#			then
+#				_fileType='CRAM'
+#			else
+#				_fileType='BAM'
+#			fi
 		else
 			log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "concordanceCheckSnps VCF not found, CRAM not found."
 		fi
 	elif [[ "${_project}" == "GS_"* ]] && [[ "${_type}" == "RNASeq" ]]
 	then
 		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/variants/concordance/")
-
 
 		if [[ -d "${_searchPath[0]}" ]]
 		then
@@ -166,9 +189,9 @@ fetch_data () {
 			log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "concordanceCheckSnps VCF not found, BAM not found for RNA sample."
 		fi
 
-	elif [[ "${_project}" == "OPAR_"* ]]
+	elif [[ "${_project}" == "OPAR_"* ]] && [[ "${_type}" == "OA" ]]
 	then
-		_searchPath=("/groups/${NGSGROUP}/dat0"*"/openarray/"*"${_project}"*"/")
+		_searchPath=("/groups/${ARRAYGROUP}/dat0"*"/openarray/"*"${_project}"*"/")
 
 		#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to OA
 		_filePath="$(set -e; fetch "${_sample}" ".oarray.txt" "${_searchPath[0]}")"
@@ -184,7 +207,7 @@ fetch_data () {
 		_sampleId="$(basename "${_filePath}" ".cram")"
 		_fileType='CRAM'
 	else
-		log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The project folder ${_project} ${_sample} ${_type} cannot be found anywhere."
+		log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The project folder ${_project} ${_sample} ${_type} cannot be found anywhere in ${_searchPath}."
 		_sampleId='not found'
 		_project='not found'
 		_fileType='not found'
@@ -283,7 +306,7 @@ done
 # Make sure to use an account for cron jobs and *without* write access to prm storage.
 #
 
-if [[ "${ROLE_USER}" != "${DATA_MANAGER}" ]]
+if [[ "${ROLE_USER}" != "${ATEAMBOTUSER}" ]]
 then
 	log4Bash 'FATAL' "${LINENO}" "${FUNCNAME:-main}" '1' "This script must be executed by user ${ATEAMBOTUSER}, but you are ${ROLE_USER} (${REAL_USER})."
 fi
@@ -304,19 +327,19 @@ fi
 #kolom 9: GenomeBuild 2
 
 # source dir for Darwin created jobfiles
-samplesheetsDir="/groups/${NGSGROUP}/dat06/ConcordanceCheckSamplesheets/Opar"
+samplesheetsDir="/groups/${NGSGROUP}/dat07/ConcordanceCheckSamplesheets/jobfiles_v3"
 mapfile -t sampleSheetsDarwin < <(find "${samplesheetsDir}" -maxdepth 1 -type f -name '*.csv')
 
 if [[ "${#sampleSheetsDarwin[@]}" -eq '0' ]]
 then
-	log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "No sample sheets found @ /groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/: There is nothing to do."
+	log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "No sample sheets found @ ${samplesheetsDir}: There is nothing to do."
 	trap - EXIT
 	exit 0
 else
 	for darwinSamplesheet in "${sampleSheetsDarwin[@]}"
 	do
 
-		controlFileBase="/groups/${GROUP}/${PRM_LFS}/logs/concordance/"
+		controlFileBase="/groups/${GROUP}/${DAT_LFS}/logs/concordance/"
 		< "${darwinSamplesheet}" sed 's/\r/\n/g' | sed "/^[\s,]*$/d" > "${darwinSamplesheet}.converted"
 		darwinSamplesheet="${darwinSamplesheet}.converted"
 		samplesheetName="$(basename "${darwinSamplesheet}" ".csv.converted")"

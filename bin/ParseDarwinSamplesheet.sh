@@ -342,7 +342,7 @@ fi
 #kolom 9: GenomeBuild 2
 
 # source dir for Darwin created jobfiles
-samplesheetsDir="/groups/${NGSGROUP}/dat07/ConcordanceCheckSamplesheets/jobfiles_v3"
+samplesheetsDir="/groups/${NGSGROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/jobfiles_v3"
 mapfile -t sampleSheetsDarwin < <(find "${samplesheetsDir}" -maxdepth 1 -type f -name '*.csv')
 
 if [[ "${#sampleSheetsDarwin[@]}" -eq '0' ]]

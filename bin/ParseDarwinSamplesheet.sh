@@ -124,7 +124,7 @@ fetch_data () {
 		_projectId="${_projectId}"
 	fi
 
-	log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Try to find: /groups/${NGSGROUP}/prm0"*"/projects/${_projectId}*${_postfix}"
+	log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Try to find: /groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"${_postfix}"
 
 	if [[ "${_prefix}" =~ ^(NGS|NGSR|QXTR|XHTS|MAGR|QXT|HSR|GS)$ ]] && [[ "${_type}" =~ ^(WES|WGS)$ ]]
 	then

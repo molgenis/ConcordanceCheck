@@ -251,11 +251,9 @@ fi
 			}
 
 	# Adding concordance pipeline version into .sample file.
-	echo -e "concordanceCheckVersion\n${concordanceCheckVersion}" > "${concordanceDir}/results/${concordanceCheckId}.ConcordanceCheckVersion"
-	paste "${concordanceDir}/results/${concordanceCheckId}.sample" "${concordanceDir}/results/${concordanceCheckId}.ConcordanceCheckVersion" > "${concordanceDir}/results/${concordanceCheckId}.tmp"
-	mv -v "${concordanceDir}/results/${concordanceCheckId}."{tmp,sample}
-	rm "${concordanceDir}/results/${concordanceCheckId}.ConcordanceCheckVersion"
-
+	awk -v c="${concordanceCheckVersion}" '{if (NR>1){print $0"\t"c}else {print $0"\tConcordanceCheckVersion"}}' "${concordanceDir}/results/${concordanceCheckId}.sample" > "${concordanceDir}/results/${concordanceCheckId}.sample.tmp"
+	mv "${concordanceDir}/results/${concordanceCheckId}.sample{.tmp,}
+	
 	if [[ -e "${JOB_CONTROLE_FILE_BASE}.started" ]]
 	then
 		mv "${JOB_CONTROLE_FILE_BASE}."{started,finished}

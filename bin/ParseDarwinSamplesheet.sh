@@ -117,7 +117,7 @@ fetch_data () {
 	_projectId=$(echo "${_project}" | awk -F '-' '{print $1}')
 	_postfix=$(echo "${_project}" | awk -F '-' '{print $2}')
 	
-	if [[ "${_projectId#${_projectId%?}}" == [A-Z] ]]
+	if [[ "${_projectId}" =~ [A-Z]$ ]]
 	then
 		_projectId="${_projectId::-1}"
 	fi

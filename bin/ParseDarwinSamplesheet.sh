@@ -48,8 +48,8 @@ function showHelp() {
 ======================================================================================================================
 Scripts to make automatically a samplesheet for the concordance check between ngs and array data and pushes the ngs and 
 array data to the destination machine.
-ngs.vcf should be in /groups/${NGSGROUP}/${PRM_LFS}/concordance/ngs/.
-array.vcf should be in /groups/${ARRAYGROUP}/${PRM_LFS}/concordance/array/.
+ngs projects should be in /groups/${NGSGROUP}/${PRM_LFS}/projects.
+array projects should be in /groups/${ARRAYGROUP}/${PRM_LFS}/openarray/.
 
 
 Usage:
@@ -109,25 +109,29 @@ fetch_data () {
 	local _filePath=""
 	local _fileType=""
 	local _sampleId=""
-
 	local _prefix=""
+	local _projectId=""
+	local _postfix=""
+
 	_prefix=$(echo "${_project}" | awk -F '_' '{print $1}')
+	_projectId=$(echo "${_project}" | awk -F '-' '{print $1}')
+	_postfix=$(echo "${_project}" | awk -F '-' '{print $2}')
+	
+	if [[ "${_projectId}" =~ [A-Z]$ ]]
+	then
+		_projectId="${_projectId::-1}"
+	fi
+
+	log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Try to find: /groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"${_postfix}"
 
 	if [[ "${_prefix}" =~ ^(NGS|NGSR|QXTR|XHTS|MAGR|QXT|HSR|GS)$ ]] && [[ "${_type}" =~ ^(WES|WGS)$ ]]
 	then
-		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/concordanceCheckSnps/")
+		
+		###
+		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"${_postfix}/run01/results/alignment/")
 		if [[ -e "${_searchPath[0]}" ]]
 		then
-			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
-			_filePath="$(set -e; fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath[0]}")"
-			_sampleId="$(basename "${_filePath}" ".concordanceCheckCalls.vcf")"
-			_fileType='VCF'
 
-		elif [[ ! -d "${_searchPath[0]}" ]]
-		then
-			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "VCF not found, Try fetching CRAM."
-			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
-			
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
 			_filePath="$(set -e; fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath[0]}")"
 			_sampleId="$(basename "${_filePath}" ".merged.dedup.bam.cram")"
@@ -138,13 +142,45 @@ fetch_data () {
 			else
 				_fileType='BAM'
 			fi
+		elif [[ ! -d "${_searchPath[0]}" ]]
+		then
+			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"${_postfix}/run01/results/concordanceCheckSnps/")
+			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
+			_filePath="$(set -e; fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath[0]}")"
+			_sampleId="$(basename "${_filePath}" ".concordanceCheckCalls.vcf")"
+			_fileType='VCF'
+
+		### later switch vcf before bam.
+
+#		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/concordanceCheckSnps/")
+#		if [[ -e "${_searchPath[0]}" ]]
+#		then
+#			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
+#			_filePath="$(set -e; fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath[0]}")"
+#			_sampleId="$(basename "${_filePath}" ".concordanceCheckCalls.vcf")"
+#			_fileType='VCF'
+
+#		elif [[ ! -d "${_searchPath[0]}" ]]
+#		then
+#			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "VCF not found, Try fetching CRAM."
+#			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
+
+			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
+#			_filePath="$(set -e; fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath[0]}")"
+#			_sampleId="$(basename "${_filePath}" ".merged.dedup.bam.cram")"
+#			_sampleId="$(basename "${_sampleId}" ".merged.dedup.bam")"
+#			if [[ "${_filePath}" == *"cram"* ]]
+#			then
+#				_fileType='CRAM'
+#			else
+#				_fileType='BAM'
+#			fi
 		else
 			log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "concordanceCheckSnps VCF not found, CRAM not found."
 		fi
 	elif [[ "${_project}" == "GS_"* ]] && [[ "${_type}" == "RNASeq" ]]
 	then
-		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/variants/concordance/")
-
+		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"${_postfix}/run01/results/variants/concordance/")
 
 		if [[ -d "${_searchPath[0]}" ]]
 		then
@@ -156,7 +192,7 @@ fetch_data () {
 		elif [[ ! -d "${_searchPath[0]}" ]]
 		then
 			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "RNA VCF not found, Try fetching BAM."
-			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
+			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"${_postfix}/run01/results/alignment/")
 
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
 			_filePath="$(set -e; fetch "${_sample}" ".sorted.merged.bam" "${_searchPath[0]}")"
@@ -166,9 +202,9 @@ fetch_data () {
 			log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "concordanceCheckSnps VCF not found, BAM not found for RNA sample."
 		fi
 
-	elif [[ "${_project}" == "OPAR_"* ]]
+	elif [[ "${_project}" == "OPAR_"* ]] && [[ "${_type}" == "OA" ]]
 	then
-		_searchPath=("/groups/${NGSGROUP}/dat0"*"/openarray/"*"${_project}"*"/")
+		_searchPath=("/groups/${ARRAYGROUP}/dat0"*"/openarray/"*"${_project}"*"/")
 
 		#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to OA
 		_filePath="$(set -e; fetch "${_sample}" ".oarray.txt" "${_searchPath[0]}")"
@@ -184,7 +220,7 @@ fetch_data () {
 		_sampleId="$(basename "${_filePath}" ".cram")"
 		_fileType='CRAM'
 	else
-		log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The project folder ${_project} ${_sample} ${_type} cannot be found anywhere."
+		log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The project folder ${_project} ${_sample} ${_type} cannot be found anywhere in ${_searchPath[0]}."
 		_sampleId='not found'
 		_project='not found'
 		_fileType='not found'
@@ -283,13 +319,13 @@ done
 # Make sure to use an account for cron jobs and *without* write access to prm storage.
 #
 
-if [[ "${ROLE_USER}" != "${DATA_MANAGER}" ]]
+if [[ "${ROLE_USER}" != "${ATEAMBOTUSER}" ]]
 then
 	log4Bash 'FATAL' "${LINENO}" "${FUNCNAME:-main}" '1' "This script must be executed by user ${ATEAMBOTUSER}, but you are ${ROLE_USER} (${REAL_USER})."
 fi
 
 # shellcheck disable=SC2029
-## ervanuit gaande dat de filename samplename.txt heet, 
+## ervanuit gaande dat de filename samplename.txt heet,
 #  example filename: processStepID_project1_sample1_project2_sample2.csv
 #  example content   658059	HSR_195	DNA12345	DNA	GRCh37	OPAR_12	DNA12345	DNA	GRCh38
 
@@ -299,24 +335,24 @@ fi
 #kolom 4: Material 1
 #kolom 5: GenomeBuild 1
 #kolom 6: projectNaam 2
-#kolom 7: DNA nummer 2 
+#kolom 7: DNA nummer 2
 #kolom 8: Material 2
 #kolom 9: GenomeBuild 2
 
 # source dir for Darwin created jobfiles
-samplesheetsDir="/groups/${NGSGROUP}/dat06/ConcordanceCheckSamplesheets/Opar"
+samplesheetsDir="/groups/${NGSGROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/jobfiles_v3"
 mapfile -t sampleSheetsDarwin < <(find "${samplesheetsDir}" -maxdepth 1 -type f -name '*.csv')
 
 if [[ "${#sampleSheetsDarwin[@]}" -eq '0' ]]
 then
-	log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "No sample sheets found @ /groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/: There is nothing to do."
+	log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "No sample sheets found @ ${samplesheetsDir}: There is nothing to do."
 	trap - EXIT
 	exit 0
 else
 	for darwinSamplesheet in "${sampleSheetsDarwin[@]}"
 	do
 
-		controlFileBase="/groups/${GROUP}/${PRM_LFS}/logs/concordance/"
+		controlFileBase="/groups/${GROUP}/${DAT_LFS}/logs/concordance/"
 		< "${darwinSamplesheet}" sed 's/\r/\n/g' | sed "/^[\s,]*$/d" > "${darwinSamplesheet}.converted"
 		darwinSamplesheet="${darwinSamplesheet}.converted"
 		samplesheetName="$(basename "${darwinSamplesheet}" ".csv.converted")"
@@ -344,7 +380,7 @@ else
 		project1="${return_array[project]}"
 		fileType1="${return_array[fileType]}"
 		filePath1="${return_array[filePath]}"
-		
+
 		# try the fetch FileName, project, fileType,filePaths for sampleId 2
 		fetch_data "${project2}" "${sample2}" "${sampleType2}"
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "return from fetch_data for sample ${sample2}: ${return_array[sampleId]}, ${return_array[project]}, ${return_array[fileType]},${return_array[filePath]}"
@@ -352,7 +388,7 @@ else
 		project2="${return_array[project]}"
 		fileType2="${return_array[fileType]}"
 		filePath2="${return_array[filePath]}"
-	
+
 		# skip jobfile if one of the files can not be found.
 		if [[ "${filePath1}" == 'not found' ]] || [[ "${filePath2}" == 'not found' ]]
 		then
@@ -363,8 +399,8 @@ else
 		else
 
 			#rsync file to /groups/${GROUP}/${TMP_LFS}/concordance/tmp/ on ${HOSTNAME_TMP}
-			rsync -rv "${filePath1}" "${HOSTNAME_TMP}:/groups/${GROUP}/${TMP_LFS}/concordance/ngs/"
-			rsync -rv "${filePath2}" "${HOSTNAME_TMP}:/groups/${GROUP}/${TMP_LFS}/concordance/ngs/"
+			rsync -av --progress --log-file="${JOB_CONTROLE_FILE_BASE}.started" --chmod='Du=rwx,Dg=rsx,Fu=rw,Fg=r,o-rwx' "${filePath1}" "${HOSTNAME_TMP}:/groups/${GROUP}/${TMP_LFS}/concordance/ngs/"
+			rsync -av --progress --log-file="${JOB_CONTROLE_FILE_BASE}.started" --chmod='Du=rwx,Dg=rsx,Fu=rw,Fg=r,o-rwx' "${filePath2}" "${HOSTNAME_TMP}:/groups/${GROUP}/${TMP_LFS}/concordance/ngs/"
 
 			fileTmpDir="/groups/${GROUP}/${TMP_LFS}/concordance/ngs/"
 			fileName1="$(basename "${filePath1}")"
@@ -372,15 +408,15 @@ else
 
 			#create concondanceCheck mapping file
 			#filename structure example:
-			
+
 			#${processStepId}_${project1}_${sampleId1}_${project2}_${sampleId2}.sampleId.txt
-		
+
 			#Mapping file content example:
 
 			#data1Id	data2Id	location1	location2	fileType1	fileType2	build1	build2	project1	project2	fileprefix	processStepId
 			#${sampleId1}	${sampleId2}	${filePath1}/${sampleId1}.extention	${filePath2}/${sampleId2}.extention	VCF|OPENARRAY|BAM|CRAM	VCF|OPENARRAY|BAM|CRAM	CRCh37|CRCh38	CRCh37|CRCh38	project1	project2	jobfilePrefix	processStepId
 
-			# header and content for mappingfile.	
+			# header and content for mappingfile.
 			HEADER="data1Id\tdata2Id\tlocation1\tlocation2\tfileType1\tfileType2\tbuild1\tbuild2\tproject1\tproject2\tfileprefix\tprocessStepId"
 			CONTENT="${sampleId1}\t${sampleId2}\t${fileTmpDir}/${fileName1}\t${fileTmpDir}/${fileName2}\t${fileType1}\t${fileType2}\t${genomebuild1}\t${genomebuild2}\t${project1}\t${project2}\t${samplesheetName}\t${processStepID}"
 
@@ -388,7 +424,7 @@ else
 			# shellcheck disable=SC2029
 			ssh "${HOSTNAME_TMP}" "echo -e \"${HEADER}\n${CONTENT}\" > \"/groups/${GROUP}/${TMP_LFS}/concordance/samplesheets/${samplesheetName}.sampleId.txt\""
 			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "samplesheet created on ${HOSTNAME_TMP}: /groups/${GROUP}/${TMP_LFS}/concordance/samplesheets/${samplesheetName}.sampleId.txt"
-		
+
 		#copy original darwinSamplesheet to archive and remove the .converted one
 		log4Bash 'TRACE' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "moving ${darwinSamplesheet%.converted} to /groups/${GROUP}/${DAT_LFS}/ConcordanceCheckSamplesheets/archive/ "
 		mv -v "${darwinSamplesheet%.converted}" "${samplesheetsDir}/archive/"

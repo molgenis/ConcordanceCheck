@@ -120,8 +120,6 @@ fetch_data () {
 	if [[ "${_projectId#${_projectId%?}}" == [A-Z] ]]
 	then
 		_projectId="${_projectId::-1}"
-	else
-		_projectId="${_projectId}"
 	fi
 
 	log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Try to find: /groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"${_postfix}"

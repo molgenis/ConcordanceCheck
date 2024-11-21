@@ -220,7 +220,7 @@ fetch_data () {
 		_sampleId="$(basename "${_filePath}" ".cram")"
 		_fileType='CRAM'
 	else
-		log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The project folder ${_project} ${_sample} ${_type} cannot be found anywhere in ${_searchPath}."
+		log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The project folder ${_project} ${_sample} ${_type} cannot be found anywhere in ${_searchPath[0]}."
 		_sampleId='not found'
 		_project='not found'
 		_fileType='not found'

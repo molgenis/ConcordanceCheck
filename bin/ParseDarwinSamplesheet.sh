@@ -122,13 +122,13 @@ fetch_data () {
 		_projectId="${_projectId::-1}"
 	fi
 
-	log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Try to find: /groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"${_postfix}"
+	log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Try to find: /groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*
 
 	if [[ "${_prefix}" =~ ^(NGS|NGSR|QXTR|XHTS|MAGR|QXT|HSR|GS)$ ]] && [[ "${_type}" =~ ^(WES|WGS)$ ]]
 	then
 		
 		###
-		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"${_postfix}/run01/results/alignment/")
+		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"/run01/results/alignment/")
 		if [[ -e "${_searchPath[0]}" ]]
 		then
 
@@ -144,7 +144,7 @@ fetch_data () {
 			fi
 		elif [[ ! -d "${_searchPath[0]}" ]]
 		then
-			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"${_postfix}/run01/results/concordanceCheckSnps/")
+			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"/run01/results/concordanceCheckSnps/")
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
 			_filePath="$(set -e; fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath[0]}")"
 			_sampleId="$(basename "${_filePath}" ".concordanceCheckCalls.vcf")"
@@ -152,7 +152,7 @@ fetch_data () {
 
 		### later switch vcf before bam.
 
-#		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/concordanceCheckSnps/")
+#		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"/run01/results/concordanceCheckSnps/")
 #		if [[ -e "${_searchPath[0]}" ]]
 #		then
 #			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
@@ -180,7 +180,7 @@ fetch_data () {
 		fi
 	elif [[ "${_project}" == "GS_"* ]] && [[ "${_type}" == "RNASeq" ]]
 	then
-		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"${_postfix}/run01/results/variants/concordance/")
+		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"/run01/results/variants/concordance/")
 
 		if [[ -d "${_searchPath[0]}" ]]
 		then
@@ -192,7 +192,7 @@ fetch_data () {
 		elif [[ ! -d "${_searchPath[0]}" ]]
 		then
 			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "RNA VCF not found, Try fetching BAM."
-			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"${_postfix}/run01/results/alignment/")
+			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"/run01/results/alignment/")
 
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
 			_filePath="$(set -e; fetch "${_sample}" ".sorted.merged.bam" "${_searchPath[0]}")"

@@ -15,6 +15,7 @@ log.info """\
 include { LIFTOVER } from './modules/LIFTOVER/liftover'
 include { CONVERT }  from './modules/CONVERT/convert'
 include { SNPCALL }  from './modules/SNPCALL/snpcall'
+include { FILTER }  from './modules/FILTER/filter'
 include { CONCORDANCE }  from './modules/CONCORDANCE/concordance'
 
 def split_samples( row ) {
@@ -126,6 +127,7 @@ workflow {
     | subscribe { item -> println "Error, got UNKNOWN fileType: ${item}" }
 
     Channel.empty().mix( ch_vcfs_liftovered, ch_vcf_liftover.ready, ch_oa_liftover.ready, ch_snpcall_liftover.ready)
+    | FILTER
     | map { sample , file -> [groupKey(sample.processStepId, 2), sample, file ] }
     | groupTuple( remainder: true )
     | map { key, group, files -> validateGroup(key, group, files) }

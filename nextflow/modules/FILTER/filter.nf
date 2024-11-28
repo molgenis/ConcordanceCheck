@@ -1,7 +1,7 @@
 process FILTER {
     label 'filter'
     tag "$pair_id"
-    module = ['picard/2.26.10-Java-8-LTS','HTSlib/1.16-GCCcore-11.3.0']
+    module = ['BCFtools/1.19-GCCcore-11.3.0','SAMtools/1.16.1-GCCcore-11.3.0']
 
     input:
     tuple val(meta), path(file)

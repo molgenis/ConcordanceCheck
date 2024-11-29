@@ -124,7 +124,7 @@ fetch_data () {
 
 	log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Try to find: /groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*
 
-	if [[ "${_prefix}" =~ ^(NGS|NGSR|QXTR|XHTS|MAGR|QXT|HSR|GS)$ ]] && [[ "${_type}" =~ ^(WES|WGS)$ ]]
+	if [[ "${_prefix}" =~ ^(NGS|NGSR|QXTR|XHTS|MAGR|QXT|HSR|GS)$ ]] && [[ "${_type}" =~ ^(WES|WGS|NGS)$ ]]
 	then
 		
 		###
@@ -220,7 +220,7 @@ fetch_data () {
 		_sampleId="$(basename "${_filePath}" ".cram")"
 		_fileType='CRAM'
 	else
-		log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The project folder ${_project} ${_sample} ${_type} cannot be found anywhere in ${_searchPath[0]}."
+		log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The project folder ${_project} ${_sample} ${_type} cannot be found anywhere."
 		_sampleId='not found'
 		_project='not found'
 		_fileType='not found'
@@ -323,6 +323,11 @@ if [[ "${ROLE_USER}" != "${ATEAMBOTUSER}" ]]
 then
 	log4Bash 'FATAL' "${LINENO}" "${FUNCNAME:-main}" '1' "This script must be executed by user ${ATEAMBOTUSER}, but you are ${ROLE_USER} (${REAL_USER})."
 fi
+
+lockFile="${DAT_ROOT_DIR}/logs/${SCRIPT_NAME}.lock"
+thereShallBeOnlyOne "${lockFile}"
+log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Successfully got exclusive access to lock file ${lockFile} ..."
+log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Log files will be written to ${DAT_ROOT_DIR}/logs ..."
 
 # shellcheck disable=SC2029
 ## ervanuit gaande dat de filename samplename.txt heet,

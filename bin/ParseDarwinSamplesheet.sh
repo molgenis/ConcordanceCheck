@@ -81,13 +81,13 @@ EOH
 fetch () {
 # gets a sampleId, a extention and searchPatch and reruns the filename, full filepath. 
 local _sample="${1}"
-local _extention="${2}"
-local _searchPath="${3}"
+local _extention="${2}" && shift && shift #remove first 2 elements from _searchPath[@]
+local _searchPath=("${@}") #receives an array with one or more search paths.
 local _filePath=""
 
 	if [[ -e "${_searchPath[0]}" ]]
 	then
-		mapfile -t _files < <(find "${_searchPath}" -maxdepth 1 -regex "${_searchPath}.*${_sample}.*${_extention}" )
+		mapfile -t _files < <(find "${_searchPath[@]}" -maxdepth 1 -regex ".*${_sample}.*${_extention}" )
 		if [[ "${#_files[@]}" -eq '0' ]]
 		then
 			_filePath="not found"
@@ -133,7 +133,7 @@ fetch_data () {
 		then
 
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
-			_filePath="$(set -e; fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath[0]}")"
+			_filePath="$(set -e; fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath[@]}")"
 			_sampleId="$(basename "${_filePath}" ".merged.dedup.bam.cram")"
 			_sampleId="$(basename "${_sampleId}" ".merged.dedup.bam")"
 			if [[ "${_filePath}" == *"cram"* ]]
@@ -146,7 +146,7 @@ fetch_data () {
 		then
 			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"/run01/results/concordanceCheckSnps/")
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
-			_filePath="$(set -e; fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath[0]}")"
+			_filePath="$(set -e; fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath[@]}")"
 			_sampleId="$(basename "${_filePath}" ".concordanceCheckCalls.vcf")"
 			_fileType='VCF'
 
@@ -156,7 +156,7 @@ fetch_data () {
 #		if [[ -e "${_searchPath[0]}" ]]
 #		then
 #			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
-#			_filePath="$(set -e; fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath[0]}")"
+#			_filePath="$(set -e; fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath[@]}")"
 #			_sampleId="$(basename "${_filePath}" ".concordanceCheckCalls.vcf")"
 #			_fileType='VCF'
 
@@ -166,7 +166,7 @@ fetch_data () {
 #			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
 
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
-#			_filePath="$(set -e; fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath[0]}")"
+#			_filePath="$(set -e; fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath[@]}")"
 #			_sampleId="$(basename "${_filePath}" ".merged.dedup.bam.cram")"
 #			_sampleId="$(basename "${_sampleId}" ".merged.dedup.bam")"
 #			if [[ "${_filePath}" == *"cram"* ]]
@@ -185,7 +185,7 @@ fetch_data () {
 		if [[ -d "${_searchPath[0]}" ]]
 		then
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
-			_filePath="$(set -e; fetch "${_sample}" ".concordance.vcf.gz" "${_searchPath[0]}")"
+			_filePath="$(set -e; fetch "${_sample}" ".concordance.vcf.gz" "${_searchPath[@]}")"
 			_sampleId="$(basename "${_filePath}" ".concordance.vcf.gz")"
 			_fileType='VCF'
 
@@ -195,7 +195,7 @@ fetch_data () {
 			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"/run01/results/alignment/")
 
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
-			_filePath="$(set -e; fetch "${_sample}" ".sorted.merged.bam" "${_searchPath[0]}")"
+			_filePath="$(set -e; fetch "${_sample}" ".sorted.merged.bam" "${_searchPath[@]}")"
 			_sampleId="$(basename "${_filePath}" ".sorted.merged.bam")"
 			_fileType='BAM'
 		else
@@ -207,7 +207,7 @@ fetch_data () {
 		_searchPath=("/groups/${ARRAYGROUP}/dat0"*"/openarray/"*"${_project}"*"/")
 
 		#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to OA
-		_filePath="$(set -e; fetch "${_sample}" ".oarray.txt" "${_searchPath[0]}")"
+		_filePath="$(set -e; fetch "${_sample}" ".oarray.txt" "${_searchPath[@]}")"
 		_sampleId="$(basename "${_filePath}" ".oarray.txt")"
 		_fileType='OPENARRAY'
 
@@ -216,7 +216,7 @@ fetch_data () {
 		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/"*"${_project}"*"/run01/results/intermediates/")
 
 		#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to OA
-		_filePath="$(set -e; fetch "${_sample}" ".cram" "${_searchPath[0]}")"
+		_filePath="$(set -e; fetch "${_sample}" ".cram" "${_searchPath[@]}")"
 		_sampleId="$(basename "${_filePath}" ".cram")"
 		_fileType='CRAM'
 	else

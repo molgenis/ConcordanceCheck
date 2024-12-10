@@ -5,5 +5,5 @@ set -eu
 
     sampleId="!{meta.dataId}"
 
-    bcftools filter -e "INFO/DP < !{params.minimalDP}" "!{file}" > "!{sampleId}.!{params.build}.DPfiltered.vcf"
-    bgzip -c "!{sampleId}.!{params.build}.DPfiltered.vcf" > "!{sampleId}.!{params.build}.DPfiltered.vcf.gz"
+    bcftools filter -e "INFO/DP < !{params.minimalDP}" "!{file}" > "!{sampleId}.!{meta.build}.DPfiltered.vcf"
+    bgzip -c "!{sampleId}.!{meta.build}.DPfiltered.vcf" > "!{sampleId}.!{meta.build}.DPfiltered.vcf.gz"

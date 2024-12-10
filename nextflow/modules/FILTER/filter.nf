@@ -13,13 +13,13 @@ process FILTER {
 
     file="${file}"
     sampleId="${meta.dataId}"
-    vcf="${meta.dataId}.${params.build}.DPfiltered.vcf.gz"
+    vcf="${meta.dataId}.${meta.build}.DPfiltered.vcf.gz"
 
     template 'filter.sh'
 
     stub:
 
-    vcf="${meta.dataId}.${params.build}.DPfiltered.vcf.gz"
+    vcf="${meta.dataId}.${meta.build}.DPfiltered.vcf.gz"
  
     """
     touch "${vcf}"

@@ -126,11 +126,18 @@ fetch_data () {
 
 	if [[ "${_prefix}" =~ ^(NGS|NGSR|QXTR|XHTS|MAGR|QXT|HSR|GS)$ ]] && [[ "${_type}" =~ ^(WES|WGS|NGS)$ ]]
 	then
-		
-		###
-		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"/run01/results/alignment/")
+		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"/run01/results/concordanceCheckSnps/")
 		if [[ -e "${_searchPath[0]}" ]]
 		then
+			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
+			_filePath="$(set -e; fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath[@]}")"
+			_sampleId="$(basename "${_filePath}" ".concordanceCheckCalls.vcf")"
+			_fileType='VCF'
+
+		elif [[ ! -d "${_searchPath[0]}" ]]
+		then
+			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "VCF not found, Try fetching CRAM."
+			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"/run01/results/alignment/")
 
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
 			_filePath="$(set -e; fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath[@]}")"
@@ -142,39 +149,6 @@ fetch_data () {
 			else
 				_fileType='BAM'
 			fi
-		elif [[ ! -d "${_searchPath[0]}" ]]
-		then
-			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"/run01/results/concordanceCheckSnps/")
-			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
-			_filePath="$(set -e; fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath[@]}")"
-			_sampleId="$(basename "${_filePath}" ".concordanceCheckCalls.vcf")"
-			_fileType='VCF'
-
-		### later switch vcf before bam.
-
-#		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"/run01/results/concordanceCheckSnps/")
-#		if [[ -e "${_searchPath[0]}" ]]
-#		then
-#			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
-#			_filePath="$(set -e; fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath[@]}")"
-#			_sampleId="$(basename "${_filePath}" ".concordanceCheckCalls.vcf")"
-#			_fileType='VCF'
-
-#		elif [[ ! -d "${_searchPath[0]}" ]]
-#		then
-#			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "VCF not found, Try fetching CRAM."
-#			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
-
-			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
-#			_filePath="$(set -e; fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath[@]}")"
-#			_sampleId="$(basename "${_filePath}" ".merged.dedup.bam.cram")"
-#			_sampleId="$(basename "${_sampleId}" ".merged.dedup.bam")"
-#			if [[ "${_filePath}" == *"cram"* ]]
-#			then
-#				_fileType='CRAM'
-#			else
-#				_fileType='BAM'
-#			fi
 		else
 			log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "concordanceCheckSnps VCF not found, CRAM not found."
 		fi

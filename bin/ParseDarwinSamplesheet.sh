@@ -81,13 +81,13 @@ EOH
 fetch () {
 # gets a sampleId, a extention and searchPatch and reruns the filename, full filepath. 
 local _sample="${1}"
-local _extention="${2}"
-local _searchPath="${3}"
+local _extention="${2}" && shift && shift #remove first 2 elements from _searchPath[@]
+local _searchPath=("${@}") #receives an array with one or more search paths.
 local _filePath=""
 
 	if [[ -e "${_searchPath[0]}" ]]
 	then
-		mapfile -t _files < <(find "${_searchPath}" -maxdepth 1 -regex "${_searchPath}.*${_sample}.*${_extention}" )
+		mapfile -t _files < <(find "${_searchPath[@]}" -maxdepth 1 -regex ".*${_sample}.*${_extention}" )
 		if [[ "${#_files[@]}" -eq '0' ]]
 		then
 			_filePath="not found"
@@ -124,16 +124,23 @@ fetch_data () {
 
 	log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "Try to find: /groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*
 
-	if [[ "${_prefix}" =~ ^(NGS|NGSR|QXTR|XHTS|MAGR|QXT|HSR|GS)$ ]] && [[ "${_type}" =~ ^(WES|WGS)$ ]]
+	if [[ "${_prefix}" =~ ^(NGS|NGSR|QXTR|XHTS|MAGR|QXT|HSR|GS)$ ]] && [[ "${_type}" =~ ^(WES|WGS|NGS)$ ]]
 	then
-		
-		###
-		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"/run01/results/alignment/")
+		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"/run01/results/concordanceCheckSnps/")
 		if [[ -e "${_searchPath[0]}" ]]
 		then
+			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
+			_filePath="$(set -e; fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath[@]}")"
+			_sampleId="$(basename "${_filePath}" ".concordanceCheckCalls.vcf")"
+			_fileType='VCF'
+
+		elif [[ ! -d "${_searchPath[0]}" ]]
+		then
+			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "VCF not found, Try fetching CRAM."
+			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"/run01/results/alignment/")
 
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
-			_filePath="$(set -e; fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath[0]}")"
+			_filePath="$(set -e; fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath[@]}")"
 			_sampleId="$(basename "${_filePath}" ".merged.dedup.bam.cram")"
 			_sampleId="$(basename "${_sampleId}" ".merged.dedup.bam")"
 			if [[ "${_filePath}" == *"cram"* ]]
@@ -142,39 +149,6 @@ fetch_data () {
 			else
 				_fileType='BAM'
 			fi
-		elif [[ ! -d "${_searchPath[0]}" ]]
-		then
-			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"/run01/results/concordanceCheckSnps/")
-			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
-			_filePath="$(set -e; fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath[0]}")"
-			_sampleId="$(basename "${_filePath}" ".concordanceCheckCalls.vcf")"
-			_fileType='VCF'
-
-		### later switch vcf before bam.
-
-#		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"/run01/results/concordanceCheckSnps/")
-#		if [[ -e "${_searchPath[0]}" ]]
-#		then
-#			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
-#			_filePath="$(set -e; fetch "${_sample}" ".concordanceCheckCalls.vcf" "${_searchPath[0]}")"
-#			_sampleId="$(basename "${_filePath}" ".concordanceCheckCalls.vcf")"
-#			_fileType='VCF'
-
-#		elif [[ ! -d "${_searchPath[0]}" ]]
-#		then
-#			log4Bash 'INFO' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "VCF not found, Try fetching CRAM."
-#			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_project}"*"/run01/results/alignment/")
-
-			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
-#			_filePath="$(set -e; fetch "${_sample}" "\(.bam\|.bam.cram\)" "${_searchPath[0]}")"
-#			_sampleId="$(basename "${_filePath}" ".merged.dedup.bam.cram")"
-#			_sampleId="$(basename "${_sampleId}" ".merged.dedup.bam")"
-#			if [[ "${_filePath}" == *"cram"* ]]
-#			then
-#				_fileType='CRAM'
-#			else
-#				_fileType='BAM'
-#			fi
 		else
 			log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "concordanceCheckSnps VCF not found, CRAM not found."
 		fi
@@ -185,7 +159,7 @@ fetch_data () {
 		if [[ -d "${_searchPath[0]}" ]]
 		then
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to VCF
-			_filePath="$(set -e; fetch "${_sample}" ".concordance.vcf.gz" "${_searchPath[0]}")"
+			_filePath="$(set -e; fetch "${_sample}" ".concordance.vcf.gz" "${_searchPath[@]}")"
 			_sampleId="$(basename "${_filePath}" ".concordance.vcf.gz")"
 			_fileType='VCF'
 
@@ -195,7 +169,7 @@ fetch_data () {
 			_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/${_projectId}"*"/run01/results/alignment/")
 
 			#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to CRAM
-			_filePath="$(set -e; fetch "${_sample}" ".sorted.merged.bam" "${_searchPath[0]}")"
+			_filePath="$(set -e; fetch "${_sample}" ".sorted.merged.bam" "${_searchPath[@]}")"
 			_sampleId="$(basename "${_filePath}" ".sorted.merged.bam")"
 			_fileType='BAM'
 		else
@@ -207,7 +181,7 @@ fetch_data () {
 		_searchPath=("/groups/${ARRAYGROUP}/dat0"*"/openarray/"*"${_project}"*"/")
 
 		#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to OA
-		_filePath="$(set -e; fetch "${_sample}" ".oarray.txt" "${_searchPath[0]}")"
+		_filePath="$(set -e; fetch "${_sample}" ".oarray.txt" "${_searchPath[@]}")"
 		_sampleId="$(basename "${_filePath}" ".oarray.txt")"
 		_fileType='OPENARRAY'
 
@@ -216,11 +190,11 @@ fetch_data () {
 		_searchPath=("/groups/${NGSGROUP}/prm0"*"/projects/"*"${_project}"*"/run01/results/intermediates/")
 
 		#fetch filename and path, and store in ${_sampleId} ${_filePath}, set _fileType to OA
-		_filePath="$(set -e; fetch "${_sample}" ".cram" "${_searchPath[0]}")"
+		_filePath="$(set -e; fetch "${_sample}" ".cram" "${_searchPath[@]}")"
 		_sampleId="$(basename "${_filePath}" ".cram")"
 		_fileType='CRAM'
 	else
-		log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The project folder ${_project} ${_sample} ${_type} cannot be found anywhere in ${_searchPath[0]}."
+		log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" '0' "The project folder ${_project} ${_sample} ${_type} cannot be found anywhere."
 		_sampleId='not found'
 		_project='not found'
 		_fileType='not found'
@@ -323,6 +297,11 @@ if [[ "${ROLE_USER}" != "${ATEAMBOTUSER}" ]]
 then
 	log4Bash 'FATAL' "${LINENO}" "${FUNCNAME:-main}" '1' "This script must be executed by user ${ATEAMBOTUSER}, but you are ${ROLE_USER} (${REAL_USER})."
 fi
+
+lockFile="${DAT_ROOT_DIR}/logs/${SCRIPT_NAME}.lock"
+thereShallBeOnlyOne "${lockFile}"
+log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Successfully got exclusive access to lock file ${lockFile} ..."
+log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Log files will be written to ${DAT_ROOT_DIR}/logs ..."
 
 # shellcheck disable=SC2029
 ## ervanuit gaande dat de filename samplename.txt heet,

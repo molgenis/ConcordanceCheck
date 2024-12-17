@@ -13,8 +13,10 @@ log.info """\
          .stripIndent()
 
 include { LIFTOVER } from './modules/LIFTOVER/liftover'
+include { LIFTOVER as LIFTOVER_OA } from './modules/LIFTOVER/liftover'
 include { CONVERT }  from './modules/CONVERT/convert'
 include { SNPCALL }  from './modules/SNPCALL/snpcall'
+include { FILTER }  from './modules/FILTER/filter'
 include { CONCORDANCE }  from './modules/CONCORDANCE/concordance'
 
 def split_samples( row ) {
@@ -118,14 +120,24 @@ workflow {
             }
     | set { ch_vcf_liftover }
 
-    Channel.empty().mix( ch_vcf_liftover.take, ch_oa_liftover.take, ch_snpcall_liftover.take )
+    //liftover non oa vcfs
+    Channel.empty().mix( ch_vcf_liftover.take, ch_snpcall_liftover.take )
     | LIFTOVER
     | set { ch_vcfs_liftovered }
+
+    //liftover oa vcfs
+    Channel.empty().mix( ch_oa_liftover.take)
+    | LIFTOVER_OA
+    | set { ch_oa_liftovered }
 
     ch_sample.UNKNOWN
     | subscribe { item -> println "Error, got UNKNOWN fileType: ${item}" }
 
-    Channel.empty().mix( ch_vcfs_liftovered, ch_vcf_liftover.ready, ch_oa_liftover.ready, ch_snpcall_liftover.ready)
+    Channel.empty().mix( ch_vcfs_liftovered, ch_vcf_liftover.ready, ch_snpcall_liftover.ready)
+    | FILTER
+    | set { ch_vcfs_filtered }
+
+   Channel.empty().mix( ch_vcfs_filtered, ch_oa_liftover.ready, ch_oa_liftovered)
     | map { sample , file -> [groupKey(sample.processStepId, 2), sample, file ] }
     | groupTuple( remainder: true )
     | map { key, group, files -> validateGroup(key, group, files) }

@@ -169,9 +169,9 @@ do
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' \
 	"finished file: /groups/${group}/${TMP_LFS}/logs/concordance/${ConcordanceID}.ConcordanceCheck.finished"
 
-	if [ -f "/groups/${group}/${TMP_LFS}/logs/concordance/${ConcordanceID}.ConcordanceCheck.finished" ]
+	if [[ -f "/groups/${group}/${TMP_LFS}/logs/concordance/${ConcordanceID}.ConcordanceCheck.finished" ]]
 	then
-		if [ -d "${concordanceDir}/jobs/${ConcordanceID}" ]
+		if [[ -d "${concordanceDir}/jobs/${ConcordanceID}" ]]
 		then
 			cd "${concordanceDir}/jobs/${ConcordanceID}" || true ;nextflow clean -n || true;cd ..
 		fi
@@ -184,7 +184,7 @@ do
 		if [[ "${dryrun}" == "no" ]]
 		then
 		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "No dryrun."
-		if [ -d "${concordanceDir}/jobs/${ConcordanceID}" ]
+		if [[ -d "${concordanceDir}/jobs/${ConcordanceID}" ]]
 		then
 			cd "${concordanceDir}/jobs/${ConcordanceID}" || true ;nextflow clean -f || true;cd ..
 		fi

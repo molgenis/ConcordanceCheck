@@ -269,8 +269,8 @@ EOH
 	then
 		cd "${concordanceDir}/jobs/${concordanceCheckId}"
 		sbatch "${concordanceCheckId}.sh"
-		sleep 15
 		touch "${concordanceCheckId}.sh.started"
+		sleep 15
 		cd -
 	fi
 done < <(find "${concordanceDir}/samplesheets/" -maxdepth 1 -type f -iname "*sampleId.txt")

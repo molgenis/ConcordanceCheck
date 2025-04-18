@@ -35,7 +35,7 @@ rm -rvf "${WORKDIR}/${pipeline}"
 	mv nextflow ../
 
 ## copy samplesheets to ${TMPDIRECTORY}/samplesheets/
-cp -v "${WORKDIR}/${pipeline}/nextflow/test/samplesheets/"*".sampleId.txt" "${WORKDIR}/samplesheets/"
+cp -v "${WORKDIR}/nextflow/test/samplesheets/"*".sampleId.txt" "${WORKDIR}/samplesheets/"
 
 rm -rf "${WORKDIR}/logs/${pipeline}"
 

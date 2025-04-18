@@ -3,14 +3,13 @@
 set -eu
 PULLREQUEST=$1
 
-checkout='Concordance'
-pipeline='Concordance'
+checkout='ConcordanceCheck'
+pipeline='ConcordanceCheck'
 
 TMPDIRECTORY='/groups/umcg-atd/tmp07'
-#GS_RUN='105856-001'
-#PROJECT="GS_001-WGS_v1"
-WORKDIR="${TMPDIRECTORY}/tmp/${pipeline}/betaAutotest/"
+WORKDIR="${TMPDIRECTORY}/tmp/${pipeline}/betaAutotest"
 TEMP="${WORKDIR}/temp"
+
 ## cleanup data to get new data
 echo "cleaning up.."
 #rm -rvf "${WORKDIR}/${pipeline}"
@@ -18,11 +17,12 @@ echo "cleaning up.."
 ## retreive data in tmp directory
 if [[ "${checkout}" == "${pipeline}" ]]
 then
-	echo "new pull request for Concordance, using default NGS_Automated to get the data from the transfer server"
+	echo "new pull request for ConcordanceCheck, using default ConcordanceCheck to get the data from the transfer server"
 	rm -rf "${WORKDIR}"
 	mkdir -p "${WORKDIR}/jobs"
 	mkdir -p "${WORKDIR}/results"
 	mkdir -p "${WORKDIR}/ngs"
+	mkdir -p "${WORKDIR}/logs/${pipeline}"
 	mkdir -p "${WORKDIR}/tmp"
 	mkdir -p "${WORKDIR}/samplesheets/archive"
 
@@ -35,25 +35,15 @@ then
 	echo "checkout commit: COMMIT"
 	git checkout -f "${COMMIT}"
 
-#	mv * ../
-#	cd ..
-#	rm -rf "${pipeline}"
 ## copy samplesheets to ${TMPDIRECTORY}/samplesheets/
-cp -v "${WORKDIR}/${pipeline}/nextflow/test/samplesheets/*.sampleId.txt" "${TMPDIRECTORY}/samplesheets/"
+cp -v "${WORKDIR}/${pipeline}/nextflow/test/samplesheets/"*".sampleId.txt" "${WORKDIR}/samplesheets/"
 
-rm -rf "${TMPDIRECTORY}/logs/${pipeline}/"
+rm -rf "${WORKDIR}/logs/${pipeline}"
 
-## get data from transfer server
-var=$(crontab -l | grep ConcordanceCheck.sh | grep -o -P 'module(.+)')
-eval ${var::-1} || {
-	echo "Something went wrong during the version check."
-	exit 1
-}
-echo "DONE with pulling/processing, now starting the pipeline"
-module load ConcordanceCheck
+echo "Now starting the pipeline"
 module load ${pipeline}/betaAutotest
 
-ConcordanceCheck.sh -g umcg-atd -w "${WORKDIR}"
+"${WORKDIR}"/ConcordanceCheck/bin/ConcordanceCheck.sh -g umcg-atd -w "${WORKDIR}"
 
 # mkdir -p "${TEMP}"
 # ## Some tests to see whether the pipeline ran successfully
@@ -108,5 +98,5 @@ ConcordanceCheck.sh -g umcg-atd -w "${WORKDIR}"
 # 	fi
 # fi
 
-# echo -e "\n Test succeeded!!\n"
-# fi
+echo -e "\n Test succeeded!!\n"
+fi

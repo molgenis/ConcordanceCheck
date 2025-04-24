@@ -59,7 +59,7 @@ Options:
 	-h	Show this help.
 	-g	group
 	-l	Log level.
-        -w      WorkDir
+	-w	WorkDir
 		Must be one of TRACE, DEBUG, INFO (default), WARN, ERROR or FATAL.
 
 Config and dependencies:
@@ -91,23 +91,23 @@ log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Parsing commandline argume
 
 # Parse options
 while getopts "h:g:w:t:l" opt; do
-  case "${opt}" in
-    g) GROUP="${OPTARG}" ;;
-    w) WORKDIR="${OPTARG}" ;;
-    l)
-	l4b_log_level="${OPTARG^^}"
-	l4b_log_level_prio="${l4b_log_levels["${l4b_log_level}"]}"
-        ;;
-   \?)
-	log4Bash 'FATAL' "${LINENO}" "${FUNCNAME[0]:-main}" '1' "Invalid option -${OPTARG}. Try $(basename "${0}") -h for help."
-        ;;
-   :)
-	log4Bash 'FATAL' "${LINENO}" "${FUNCNAME[0]:-main}" '1' "Option -${OPTARG} requires an argument. Try $(basename "${0}") -h for help."
-        ;;
-   *)
-        log4Bash 'FATAL' "${LINENO}" "${FUNCNAME[0]:-main}" '1' "Unhandled option. Try $(basename "${0}") -h for help."
-       ;;
-  esac
+	case "${opt}" in
+		g) GROUP="${OPTARG}" ;;
+		w) WORKDIR="${OPTARG}" ;;
+		l)
+		l4b_log_level="${OPTARG^^}"
+		l4b_log_level_prio="${l4b_log_levels["${l4b_log_level}"]}"
+		;;
+		\?)
+		log4Bash 'FATAL' "${LINENO}" "${FUNCNAME[0]:-main}" '1' "Invalid option -${OPTARG}. Try $(basename "${0}") -h for help."
+		;;
+		:)
+		log4Bash 'FATAL' "${LINENO}" "${FUNCNAME[0]:-main}" '1' "Option -${OPTARG} requires an argument. Try $(basename "${0}") -h for help."
+		;;
+		*)
+		log4Bash 'FATAL' "${LINENO}" "${FUNCNAME[0]:-main}" '1' "Unhandled option. Try $(basename "${0}") -h for help."
+		;;
+	esac
 done
 
 #
@@ -163,7 +163,7 @@ then
 else
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' 'Overwwrite default params: concordanceDir, TMP_ROOT_DIR and controlFileBase.'
 	concordanceDir="${WORKDIR}"
-        TMP_ROOT_DIR="${concordanceDir}"
+	TMP_ROOT_DIR="${concordanceDir}"
 	controlFileBase="${concordanceDir}"
 fi
 
@@ -283,3 +283,5 @@ done < <(find "${concordanceDir}/samplesheets/" -maxdepth 1 -type f -iname "*sam
 log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Finished successfully."
 trap - EXIT
 exit 0
+
+

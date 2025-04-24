@@ -1,2 +1,2 @@
 data1Id	data2Id	location1	location2	fileType1	fileType2	build1	build2	project1	project2	fileprefix	processStepId
-RMNISTHS_30xdownsample.GRCh38	DNA-001.GRCh37	/groups/umcg-atd/tmp07/concordance/ngs/RMNISTHS_30xdownsample.GRCh38.bam	/groups/umcg-atd/tmp07/concordance/ngs/DNA-001.GRCh37.FINAL.vcf.gz	BAM	VCF	GRCh38	GRCh37	test_123-DNA_v1	OPAR_123	100029_test_123-DNA_v1_DNA-001.GRCh38_NGS_DNA_123_NA12878	100029
+NA12878.GRCh38	DNA-001.GRCh37	/groups/umcg-atd/tmp07/tmp/ConcordanceCheck/betaAutotest/nextflow/test/bams/RMNISTHS_30xdownsample.GRCh38.bam	/groups/umcg-atd/tmp07/tmp/ConcordanceCheck/betaAutotest/nextflow/test/vcfs/DNA-001.GRCh37.FINAL.vcf.gz	BAM	VCF	GRCh38	GRCh37	test_123-DNA_v1	OPAR_123	100029_test_123-DNA_v1_DNA-001.GRCh38_NGS_DNA_123_NA12878	100029

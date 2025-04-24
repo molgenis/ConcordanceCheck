@@ -1,2 +1,2 @@
 data1Id	data2Id	location1	location2	fileType1	fileType2	build1	build2	project1	project2	fileprefix	processStepId
-DNA-005.GRCh37	OA001	/groups/umcg-atd/tmp07/concordance/ngs/DNA-005.GRCh37.bam	/groups/umcg-atd/tmp07/concordance/ngs/OA001.final.txt	BAM	OPENARRAY	GRCh37	GRCh37	test_123-DNA_v1	OPAR_123	100026_test_123-DNA_v1_DNA-005.GRCh37_OPAR_123_OA001	100026
+DNA-005.GRCh37	OA001	/groups/umcg-atd/tmp07/tmp/ConcordanceCheck/betaAutotest/nextflow/test/bams/DNA-005.GRCh37.bam	/groups/umcg-atd/tmp07/tmp/ConcordanceCheck/betaAutotest/nextflow/test/openarrays/OA001.final.txt	BAM	OPENARRAY	GRCh37	GRCh37	test_123-DNA_v1	OPAR_123	100026_test_123-DNA_v1_DNA-005.GRCh37_OPAR_123_OA001	100026

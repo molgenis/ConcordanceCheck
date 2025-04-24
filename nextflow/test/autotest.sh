@@ -44,7 +44,13 @@ compare_results_dirs() {
 		fi
 	done
 
-return "${error}"
+if [ "${error}" -ne 0 ]; then
+	echo "Test failed!!"
+	return "${error}"
+else
+	echo "Test succeeded!!"
+	return "${error}"
+fi
 }
 
 #
@@ -134,10 +140,4 @@ echo "All jobs have finished."
 #check output content in trueSet and results dir.
 compare_results_dirs "${WORKDIR}/nextflow/test/trueSet/"  "${WORKDIR}/results/"
 
-echo "error $?"
-if [ $? -ne 0 ]; then
-	echo "At least one file comparison failed!"
-	exit 1
-else
-	echo "Test succeeded!!"
-fi
+exit 0

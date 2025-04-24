@@ -30,8 +30,8 @@ compare_results_dirs() {
 		if [[ "${file1}" == *".sample"* ]];then
 			strippedf1="${WORKDIR}/tmp/1.${filename}.stripped"
 			strippedf2="${WORKDIR}/tmp/2.${filename}.stripped"
-			cut -f2-$(($(head -1 "${file1}" | awk -F'\t' '{print NF}') - 2)) "${file1}" > "${strippedf1}"
-			cut -f2-$(($(head -1 "${file2}" | awk -F'\t' '{print NF}') - 2)) "${file2}" > "${strippedf2}"
+			cut -f2-$(($(head -1 "${file1}" | awk -F'\t' '{print NF}') - 3)) "${file1}" > "${strippedf1}"
+			cut -f2-$(($(head -1 "${file2}" | awk -F'\t' '{print NF}') - 3)) "${file2}" > "${strippedf2}"
 			file1="${strippedf1}"
 			file2="${strippedf2}"
     fi

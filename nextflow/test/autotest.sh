@@ -43,8 +43,8 @@ compare_results_dirs() {
 			error=1
 		fi
 	done
-	echo "${error}"
-	return "${error}"
+
+return "${error}"
 }
 
 #
@@ -90,7 +90,7 @@ rm -rf "${WORKDIR}/logs/${pipeline}"
 echo "Now starting the pipeline"
 module load nextflow
 module load ${pipeline}/betaAutotest
-perl -pi -e 's|sleep 10|sleep 1|g' "${WORKDIR}"/ConcordanceCheck/bin/ConcordanceCheck.sh
+perl -pi -e 's|sleep 15|sleep 1|g' "${WORKDIR}"/ConcordanceCheck/bin/ConcordanceCheck.sh
 "${WORKDIR}"/ConcordanceCheck/bin/ConcordanceCheck.sh -g umcg-atd -w "${WORKDIR}" 2>&1 | tee -a "${WORKDIR}/tmp/ConcordanceCheck.log"
 
 ## wait until results files are there
@@ -124,7 +124,7 @@ while [ "${all_done}" = false ]; do
 
 	if [ "${all_done}" = false ]; then
 		echo "Waiting 10 seconds before next check..."
-		sleep 10
+		sleep 15
 		echo ""
 	fi
 done

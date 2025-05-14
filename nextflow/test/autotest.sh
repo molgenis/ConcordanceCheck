@@ -58,7 +58,7 @@ fi
 #
 
 pipeline='ConcordanceCheck'
-TMPDIR='tmp08'
+TMPDIR='tmp09'
 
 TMPDIRECTORY='/groups/umcg-atd/${TMPDIR}'
 WORKDIR="${TMPDIRECTORY}/tmp/${pipeline}/betaAutotest"
@@ -71,7 +71,9 @@ rm -rvf "${WORKDIR}"
 echo "new pull request for ConcordanceCheck"
 rm -rf "${WORKDIR}/jobs"
 rm -rf "${WORKDIR}/results/*"
+rm -rf "/tmp/${pipeline}"
 
+echo "Create workdirs"
 mkdir -p "${WORKDIR}/jobs"
 mkdir -p "${WORKDIR}/results"
 mkdir -p "${WORKDIR}/ngs"
@@ -79,13 +81,16 @@ mkdir -p "${WORKDIR}/logs/${pipeline}"
 mkdir -p "${WORKDIR}/tmp"
 mkdir -p "${WORKDIR}/samplesheets/archive"
 
-cd "${WORKDIR}"
+cd /tmp
 git clone "https://github.com/molgenis/${pipeline}.git"
 
 cd "${pipeline}" || exit
 git fetch --tags --progress "https://github.com/molgenis/${pipeline}/" +refs/pull/*:refs/remotes/origin/pr/*
 COMMIT=$(git rev-parse refs/remotes/origin/pr/${PULLREQUEST}/merge^{commit})
 git checkout -f "${COMMIT}"
+cd /tmp
+mv "${pipeline}" "${WORKDIR}"
+cd "${WORKDIR}/${pipeline}"
 
 mv nextflow ../
 

@@ -133,6 +133,7 @@ declare -a configFiles=(
 	"${CFG_DIR}/${group}.cfg"
 	"${CFG_DIR}/${HOSTNAME_SHORT}.cfg"
 	"${CFG_DIR}/sharedConfig.cfg"
+	"${CFG_DIR}/ConcordanceCheck.cfg"
 )
 for configFile in "${configFiles[@]}"; do
 	if [[ -f "${configFile}" && -r "${configFile}" ]]; then
@@ -152,42 +153,49 @@ for configFile in "${configFiles[@]}"; do
 	fi
 done
 
-
+module load "${nextflowVersion}"
 concordanceDir="/groups/${group}/${TMP_LFS}/concordance/"
-
 
 ##cleaning up files older than 30 days in PROJECTS and TMP when files are copied
 while IFS= read -r i
 do
 	ConcordanceID=$(basename "${i}" .sampleId.txt)
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "${ConcordanceID}"
-	ngsId=$(sed 1d "${i}" | awk 'BEGIN {FS="\t"}{print $2}')
-	arrayId=$(sed 1d "${i}" | awk 'BEGIN {FS="\t"}{print $1}')
-	ngsDnaNo=$(echo "${ConcordanceID}" | awk 'BEGIN {FS="_"}{OFS="_"}{print $6}')
-	arrayDnaNo=$(echo "${ConcordanceID}" | awk 'BEGIN {FS="_"}{OFS="_"}{print $1}')
+	sampleId1=$(sed 1d "${i}" | awk 'BEGIN {FS="\t"}{print $2}')
+	sampleId2=$(sed 1d "${i}" | awk 'BEGIN {FS="\t"}{print $1}')
 	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' \
-	"check ${ConcordanceID}, ngsId:${ngsId} and arrayId:${arrayId} ngsDnaNo:${ngsDnaNo}, arrayDnaNo:${arrayDnaNo}"
-	
-	if test -e "${concordanceDir}/logs/${ConcordanceID}.ConcordanceCheck.finished" 2>/dev/null
-	then
-		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' \
-			"rm -rf ${concordanceDir}/jobs/${ConcordanceID}.*/ 
-			rm -rf ${concordanceDir}/tmp/${ConcordanceID}/ 
-			rm -rf ${concordanceDir}/results/${ConcordanceID}.*
-			rm -rf ${concordanceDir}/logs/${ConcordanceID}.*
-			rm -rf ${concordanceDir}/array/${arrayId}.FINAL.vcf
-			rm -rf ${concordanceDir}/ngs/${ngsId}.final.vcf.gz"
+	"check ${ConcordanceID}, sampleId1:${sampleId1} and sampleId2:${sampleId1}"
 
+	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' \
+	"finished file: /groups/${group}/${TMP_LFS}/logs/concordance/${ConcordanceID}.ConcordanceCheck.finished"
+
+	if [[ -f "/groups/${group}/${TMP_LFS}/logs/concordance/${ConcordanceID}.ConcordanceCheck.finished" ]]
+	then
+		if [[ -d "${concordanceDir}/jobs/${ConcordanceID}" ]]
+		then
+			cd "${concordanceDir}/jobs/${ConcordanceID}" || true ;nextflow clean -n || true;cd ..
+		fi
+		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' \
+			"rm -rf ${concordanceDir}/results/${ConcordanceID}.*
+			rm -rf /groups/${group}/${TMP_LFS}/logs/concordance/${ConcordanceID}.*
+			rm -rf ${concordanceDir}/ngs/${sampleId1}.*
+			rm -rf ${concordanceDir}/ngs/${sampleId2}.*
+			rm -rf ${concordanceDir}/jobs/${ConcordanceID}/"
 		if [[ "${dryrun}" == "no" ]]
 		then
-			rm -rf "${concordanceDir}/jobs/${ConcordanceID}.*"
-			rm -rf "${concordanceDir}/tmp/${ConcordanceID}/"
-			rm -rf "${concordanceDir}/results/${ConcordanceID}.*"
-			rm -rf "${concordanceDir}/logs/${ConcordanceID}.*"
-			rm -rf "${concordanceDir}/array/${arrayId}.FINAL.vcf"
-			rm -rf "${concordanceDir}/ngs/${ngsId}.final.vcf.gz"	
+		log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "No dryrun."
+		if [[ -d "${concordanceDir}/jobs/${ConcordanceID}" ]]
+		then
+			cd "${concordanceDir}/jobs/${ConcordanceID}" || true ;nextflow clean -f || true;cd ..
 		fi
-
+			rm -rf "${concordanceDir}/results/${ConcordanceID}."*
+			rm -rf "/groups/${group}/${TMP_LFS}/logs/concordance/${ConcordanceID}."*
+			rm -rf "${concordanceDir}/ngs/${sampleId1}."*
+			rm -rf "${concordanceDir}/ngs/${sampleId2}."*
+			rm -rf "${concordanceDir}/jobs/${ConcordanceID}/"
+		fi
+	else
+		echo "Nothing done."
 	fi
 done < <(find "${TMP_ROOT_DIR}/concordance/samplesheets/archive/" -maxdepth 1 -type f -mtime +30 -exec ls -d {} \;)
 

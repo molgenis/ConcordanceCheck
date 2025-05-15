@@ -102,6 +102,7 @@ rm -rf "${WORKDIR}/logs/${pipeline}"
 echo "Now starting the pipeline"
 module load nextflow
 module load ${pipeline}/betaAutotest
+
 #perl -pi -e 's|sleep 15|sleep 1|g' "${WORKDIR}"/ConcordanceCheck/bin/ConcordanceCheck.sh
 perl -pi -e 's|\${GROUP}-ateambot|umcg-molgenis|g' "${WORKDIR}"/ConcordanceCheck/etc/sharedConfig.cfg
 perl -pi -e 's|\${ConcordanceCheckVersion}|ConcordanceCheck/betaAutotest|g' "${WORKDIR}"/ConcordanceCheck/bin/ConcordanceCheck.sh

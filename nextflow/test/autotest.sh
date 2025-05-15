@@ -1,5 +1,5 @@
 #!/bin/bash
- 
+
 set -eu
 PULLREQUEST=$1
 

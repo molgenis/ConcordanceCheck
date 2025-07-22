@@ -244,7 +244,7 @@ fi
 	-profile slurm \\
 	-resume \\
 	|| {
-			log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" "0" " Concordance pipeline crashed. Check ${concordanceDir}/jobs/${concordanceCheckId}.out"
+			log4Bash 'WARN' "${LINENO}" "${FUNCNAME[0]:-main}" "0" " Concordance pipeline crashed. Check ${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.out"
 			tail -50 "${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.out" >> "${JOB_CONTROLE_FILE_BASE}.started"
 			mv -v "${JOB_CONTROLE_FILE_BASE}."{started,failed}
 			exit 1

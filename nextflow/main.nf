@@ -17,6 +17,7 @@ include { LIFTOVER as LIFTOVER_OA } from './modules/LIFTOVER/liftover'
 include { CONVERT }  from './modules/CONVERT/convert'
 include { SNPCALL }  from './modules/SNPCALL/snpcall'
 include { FILTER }  from './modules/FILTER/filter'
+include { DEDUP }  from './modules/DEDUP/dedup'
 include { CONCORDANCE }  from './modules/CONCORDANCE/concordance'
 
 def split_samples( row ) {
@@ -88,6 +89,7 @@ workflow {
         | branch { sample ->
             OPENARRAY: sample.fileType.toUpperCase() ==~ /OPENARRAY/
             CRAMBAM: sample.fileType.toUpperCase() ==~ /CRAM/ || sample.fileType.toUpperCase() ==~ /BAM/
+            PGX: sample.fileType.toUpperCase() ==~ /PGX/
             VCF: sample.fileType.toUpperCase() ==~ /VCF/
             UNKNOWN: true 
             }
@@ -120,6 +122,11 @@ workflow {
             }
     | set { ch_vcf_liftover }
 
+    ch_sample.PGX
+    | map { meta -> [ meta, meta.file ]}
+    | DEDUP
+    | set { ch_pgx_dedupped }
+
     //liftover non oa vcfs
     Channel.empty().mix( ch_vcf_liftover.take, ch_snpcall_liftover.take )
     | LIFTOVER
@@ -137,7 +144,7 @@ workflow {
     | FILTER
     | set { ch_vcfs_filtered }
 
-   Channel.empty().mix( ch_vcfs_filtered, ch_oa_liftover.ready, ch_oa_liftovered)
+   Channel.empty().mix( ch_vcfs_filtered, ch_pgx_dedupped, ch_oa_liftover.ready, ch_oa_liftovered)
     | map { sample , file -> [groupKey(sample.processStepId, 2), sample, file ] }
     | groupTuple( remainder: true )
     | map { key, group, files -> validateGroup(key, group, files) }

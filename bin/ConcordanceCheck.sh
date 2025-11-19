@@ -90,23 +90,30 @@ log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Parsing commandline argume
 
 
 # Parse options
-while getopts "h:g:w:t:l" opt; do
+while getopts "h:g:w:l:" opt; do
 	case "${opt}" in
-		g) GROUP="${OPTARG}" ;;
-		w) WORKDIR="${OPTARG}" ;;
+		g) 
+			GROUP="${OPTARG}"
+			;;
+		h)
+			showHelp
+			;;
+		w) 
+			WORKDIR="${OPTARG}" 
+			;;
 		l)
-		l4b_log_level="${OPTARG^^}"
-		l4b_log_level_prio="${l4b_log_levels["${l4b_log_level}"]}"
-		;;
+			l4b_log_level="${OPTARG^^}"
+			l4b_log_level_prio="${l4b_log_levels["${l4b_log_level}"]}"
+			;;
 		\?)
-		log4Bash 'FATAL' "${LINENO}" "${FUNCNAME[0]:-main}" '1' "Invalid option -${OPTARG}. Try $(basename "${0}") -h for help."
-		;;
+			log4Bash 'FATAL' "${LINENO}" "${FUNCNAME[0]:-main}" '1' "Invalid option -${OPTARG}. Try $(basename "${0}") -h for help."
+			;;
 		:)
-		log4Bash 'FATAL' "${LINENO}" "${FUNCNAME[0]:-main}" '1' "Option -${OPTARG} requires an argument. Try $(basename "${0}") -h for help."
-		;;
+			log4Bash 'FATAL' "${LINENO}" "${FUNCNAME[0]:-main}" '1' "Option -${OPTARG} requires an argument. Try $(basename "${0}") -h for help."
+			;;
 		*)
-		log4Bash 'FATAL' "${LINENO}" "${FUNCNAME[0]:-main}" '1' "Unhandled option. Try $(basename "${0}") -h for help."
-		;;
+			log4Bash 'FATAL' "${LINENO}" "${FUNCNAME[0]:-main}" '1' "Unhandled option. Try $(basename "${0}") -h for help."
+			;;
 	esac
 done
 
@@ -180,7 +187,7 @@ do
 	log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Processing samplesheet ${sampleSheet} ..."
 	filePrefix="$(basename "${sampleSheet}" .sampleId.txt)"
 	concordanceCheckId="${filePrefix}"
-	#controlFileBase="/groups/${GROUP}/${TMP_LFS}/logs/concordance/"
+	controlFileBase="/groups/${GROUP}/${TMP_LFS}/logs/concordance/"
 	export JOB_CONTROLE_FILE_BASE="${controlFileBase}/${filePrefix}.${SCRIPT_NAME}"
 	# shellcheck disable=SC2174
 	mkdir -m 2770 -p "${controlFileBase}"

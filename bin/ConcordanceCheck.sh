@@ -59,6 +59,7 @@ Options:
 	-h	Show this help.
 	-g	group
 	-l	Log level.
+	-w	WorkDir
 		Must be one of TRACE, DEBUG, INFO (default), WARN, ERROR or FATAL.
 
 Config and dependencies:
@@ -86,28 +87,26 @@ EOH
 # Get commandline arguments.
 #
 log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Parsing commandline arguments ..."
-while getopts ":g:l:	h" opt
-do
+
+
+# Parse options
+while getopts "h:g:w:t:l" opt; do
 	case "${opt}" in
-		h)
-			showHelp
-			;;
-		g)
-			GROUP="${OPTARG}"
-			;;
+		g) GROUP="${OPTARG}" ;;
+		w) WORKDIR="${OPTARG}" ;;
 		l)
-			l4b_log_level="${OPTARG^^}"
-			l4b_log_level_prio="${l4b_log_levels["${l4b_log_level}"]}"
-			;;
+		l4b_log_level="${OPTARG^^}"
+		l4b_log_level_prio="${l4b_log_levels["${l4b_log_level}"]}"
+		;;
 		\?)
-			log4Bash 'FATAL' "${LINENO}" "${FUNCNAME[0]:-main}" '1' "Invalid option -${OPTARG}. Try $(basename "${0}") -h for help."
-			;;
+		log4Bash 'FATAL' "${LINENO}" "${FUNCNAME[0]:-main}" '1' "Invalid option -${OPTARG}. Try $(basename "${0}") -h for help."
+		;;
 		:)
-			log4Bash 'FATAL' "${LINENO}" "${FUNCNAME[0]:-main}" '1' "Option -${OPTARG} requires an argument. Try $(basename "${0}") -h for help."
-			;;
+		log4Bash 'FATAL' "${LINENO}" "${FUNCNAME[0]:-main}" '1' "Option -${OPTARG} requires an argument. Try $(basename "${0}") -h for help."
+		;;
 		*)
-			log4Bash 'FATAL' "${LINENO}" "${FUNCNAME[0]:-main}" '1' "Unhandled option. Try $(basename "${0}") -h for help."
-			;;
+		log4Bash 'FATAL' "${LINENO}" "${FUNCNAME[0]:-main}" '1' "Unhandled option. Try $(basename "${0}") -h for help."
+		;;
 	esac
 done
 
@@ -128,7 +127,6 @@ declare -a configFiles=(
 	"${CFG_DIR}/${HOSTNAME_SHORT}.cfg"
 	"${CFG_DIR}/sharedConfig.cfg"
 	"${CFG_DIR}/ConcordanceCheck.cfg"
-	"${HOME}/molgenis.cfg"
 )
 
 for configFile in "${configFiles[@]}"; do
@@ -159,7 +157,17 @@ then
 	log4Bash 'FATAL' "${LINENO}" "${FUNCNAME:-main}" '1' "This script must be executed by user ${ATEAMBOTUSER}, but you are ${ROLE_USER} (${REAL_USER})."
 fi
 
-lockFile="${TMP_ROOT_DIR}/logs/${SCRIPT_NAME}.lock"
+if [[ -z "${WORKDIR:-}" ]]
+then
+	concordanceDir="/groups/${GROUP}/${TMP_LFS}/concordance/"
+else
+	log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' 'Overwwrite default params: concordanceDir, TMP_ROOT_DIR and controlFileBase.'
+	concordanceDir="${WORKDIR}"
+	TMP_ROOT_DIR="${concordanceDir}"
+	controlFileBase="${concordanceDir}"
+fi
+
+lockFile="${concordanceDir}/logs/${SCRIPT_NAME}.lock"
 thereShallBeOnlyOne "${lockFile}"
 log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Successfully got exclusive access to lock file ${lockFile} ..."
 log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Log files will be written to ${TMP_ROOT_DIR}/logs ..."
@@ -167,17 +175,12 @@ log4Bash 'DEBUG' "${LINENO}" "${FUNCNAME:-main}" '0' "Log files will be written 
 concordanceCheckVersion=$(module list | grep -o -P 'ConcordanceCheck(.+)')
 module list
 
-concordanceDir="/groups/${GROUP}/${TMP_LFS}/concordance/"
-
-# header format of .sampleId.txt
-##data1Id	data2Id	location1	location2	fileType1	fileType2	build1	build2	processStepId
-
 while IFS= read -r sampleSheet
 do
 	log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Processing samplesheet ${sampleSheet} ..."
 	filePrefix="$(basename "${sampleSheet}" .sampleId.txt)"
 	concordanceCheckId="${filePrefix}"
-	controlFileBase="/groups/${GROUP}/${TMP_LFS}/logs/concordance/"
+	#controlFileBase="/groups/${GROUP}/${TMP_LFS}/logs/concordance/"
 	export JOB_CONTROLE_FILE_BASE="${controlFileBase}/${filePrefix}.${SCRIPT_NAME}"
 	# shellcheck disable=SC2174
 	mkdir -m 2770 -p "${controlFileBase}"
@@ -253,7 +256,7 @@ fi
 	# Adding concordance pipeline version into .sample file.
 	awk -v c="${concordanceCheckVersion}" '{if (NR>1){print \$0"\t"c}else {print \$0"\tConcordanceCheckVersion"}}' "${concordanceDir}/results/${concordanceCheckId}.sample" > "${concordanceDir}/results/${concordanceCheckId}.sample.tmp"
 	mv "${concordanceDir}/results/${concordanceCheckId}.sample"{.tmp,}
-	
+
 	if [[ -e "${JOB_CONTROLE_FILE_BASE}.started" ]]
 	then
 		mv "${JOB_CONTROLE_FILE_BASE}."{started,finished}
@@ -269,8 +272,8 @@ EOH
 	then
 		cd "${concordanceDir}/jobs/${concordanceCheckId}"
 		sbatch "${concordanceCheckId}.sh"
-		sleep 15
 		touch "${concordanceCheckId}.sh.started"
+		sleep 15
 		cd -
 	fi
 done < <(find "${concordanceDir}/samplesheets/" -maxdepth 1 -type f -iname "*sampleId.txt")
@@ -280,3 +283,5 @@ done < <(find "${concordanceDir}/samplesheets/" -maxdepth 1 -type f -iname "*sam
 log4Bash 'INFO' "${LINENO}" "${FUNCNAME:-main}" '0' "Finished successfully."
 trap - EXIT
 exit 0
+
+

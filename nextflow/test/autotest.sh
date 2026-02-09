@@ -58,7 +58,7 @@ fi
 #
 
 pipeline='ConcordanceCheck'
-TMPDIR='tmp09'
+TMPDIR='tmp08'
 
 TMPDIRECTORY="/groups/umcg-atd/${TMPDIR}"
 WORKDIR="${TMPDIRECTORY}/tmp/${pipeline}/betaAutotest"

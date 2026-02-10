@@ -5,7 +5,7 @@ Automation using Bash scripts and Cron jobs, inorder to automate the concordance
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/molgenis/ConcordanceCheck/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/molgenis/ConcordanceCheck/tree/master)
 
 #### Code style
-
+ 
 - Indentation: <TABS>
 - environment variables: ALL\_UPPERCASE\_WITH\_UNDERSCORES
 - global script variables: camelCase

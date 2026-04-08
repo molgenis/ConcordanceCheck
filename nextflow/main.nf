@@ -63,6 +63,17 @@ def check_liftover( rowbuild, row ){
 }
 
 /**
+ * return sorted groupTuple on dataId.
+ */
+def sortIds(group, files) {
+    def (sortedGroup, sortedFiles) = [group, files]
+        .transpose()
+        .sort { it[0].dataId }
+        .transpose()
+    return [sortedGroup, sortedFiles]
+}
+
+/**
  * return validated groupTuple result
  */
 def validateGroup( key, group, files ) {
@@ -147,7 +158,9 @@ workflow {
    Channel.empty().mix( ch_vcfs_filtered, ch_pgx_dedupped, ch_oa_liftover.ready, ch_oa_liftovered)
     | map { sample , file -> [groupKey(sample.processStepId, 2), sample, file ] }
     | groupTuple( remainder: true )
-    | map { key, group, files -> validateGroup(key, group, files) }
+    | map { key, group, files ->
+        def (newGroup, newFiles) = sortIds(group, files)
+        validateGroup(key, newGroup, newFiles) }
     | set { ch_vcfs_concordance }
 
     ch_vcfs_concordance

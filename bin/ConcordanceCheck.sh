@@ -272,6 +272,9 @@ fi
 	fi
 
 	mv "${concordanceDir}/jobs/${concordanceCheckId}/${concordanceCheckId}.sh."{started,finished}
+	printf 'Done at %s.\n' "$(date '+%Y-%m-%dT%H:%M:%S')"
+	trap - EXIT
+	exit 0
 EOH
 	fi
 

@@ -1,0 +1,2 @@
+data1Id	data2Id	location1	location2	fileType1	fileType2	build1	build2	project1	project2	fileprefix	processStepId
+NA12878.GRCh38	OA002	/groups/umcg-atd/tmp08/tmp/ConcordanceCheck/betaAutotest/nextflow/test/bams/NA12878.GRCh38.cram	/groups/umcg-atd/tmp08/tmp/ConcordanceCheck/betaAutotest/nextflow/test/openarrays/OA002.final.txt	CRAM	OPENARRAY	GRCh38	GRCh37	test_123-DNA_v1	OPAR_123	100027_test_123-DNA_v1_NA12878.GRCh38_OPAR_123_OA002.GRCh37	100027

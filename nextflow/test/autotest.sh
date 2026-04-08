@@ -7,8 +7,8 @@ PULLREQUEST=$1
 ## functions
 #
 compare_results_dirs() {
-	truth_dir="$1"
-	compare_dir="$2"
+	truth_dir="${1}"
+	compare_dir="${2}"
 	error=0  # default: success
 
 	if [[ ! -d "${truth_dir}" || ! -d "${compare_dir}" ]]; then
@@ -34,7 +34,7 @@ compare_results_dirs() {
 			cut -f3-$(($(head -1 "${file2}" | awk -F'\t' '{print NF}') - 3)) "${file2}" > "${strippedf2}"
 			file1="${strippedf1}"
 			file2="${strippedf2}"
-    fi
+		fi
 
 		if diff -q "${file1}" "${file2}" > /dev/null; then
 			echo "${filename} is equal."
@@ -81,15 +81,14 @@ mkdir -p "${WORKDIR}/logs/${pipeline}"
 mkdir -p "${WORKDIR}/tmp"
 mkdir -p "${WORKDIR}/samplesheets/archive"
 
-cd /tmp
+cd "${WORKDIR}"
 git clone "https://github.com/molgenis/${pipeline}.git"
 
 cd "${pipeline}" || exit
+
 git fetch --tags --progress "https://github.com/molgenis/${pipeline}/" +refs/pull/*:refs/remotes/origin/pr/*
 COMMIT=$(git rev-parse refs/remotes/origin/pr/${PULLREQUEST}/merge^{commit})
 git checkout -f "${COMMIT}"
-cd /tmp
-mv "${pipeline}" "${WORKDIR}"
 cd "${WORKDIR}/${pipeline}"
 
 mv nextflow ../
@@ -103,13 +102,12 @@ echo "Now starting the pipeline"
 module load nextflow
 module load ${pipeline}/betaAutotest
 
-#perl -pi -e 's|sleep 15|sleep 1|g' "${WORKDIR}"/ConcordanceCheck/bin/ConcordanceCheck.sh
+perl -pi -e 's|sleep 15|sleep 2|g' "${WORKDIR}"/ConcordanceCheck/bin/ConcordanceCheck.sh
 perl -pi -e 's|\${GROUP}-ateambot|umcg-molgenis|g' "${WORKDIR}"/ConcordanceCheck/etc/sharedConfig.cfg
 perl -pi -e 's|\${ConcordanceCheckVersion}|ConcordanceCheck/betaAutotest|g' "${WORKDIR}"/ConcordanceCheck/bin/ConcordanceCheck.sh
 "${WORKDIR}"/ConcordanceCheck/bin/ConcordanceCheck.sh -g umcg-atd -w "${WORKDIR}" 2>&1 | tee -a "${WORKDIR}/tmp/ConcordanceCheck.log"
 
 ## wait until results files are there
-
 job_ids=($(grep 'Submitted batch job' "${WORKDIR}/tmp/ConcordanceCheck.log" | awk '{print $4}'))
 echo "Monitoring ${#job_ids[@]} Slurm jobs..."
 
@@ -138,7 +136,7 @@ while [ "${all_done}" = false ]; do
 	done
 
 	if [ "${all_done}" = false ]; then
-		echo "Waiting 10 seconds before next check..."
+		echo "Waiting 15 seconds before next check..."
 		sleep 15
 		echo ""
 	fi

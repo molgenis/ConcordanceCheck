@@ -1,0 +1,70 @@
+wget ftp://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/analysis/NIST_v4.1_SmallVariantDraftBenchmark_12182019/GRCh37/HG002_GRCh37_1_22_v4.1_draft_benchmark.vcf.gz
+#wget ftp://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/analysis/NIST_v4.1_SmallVariantDraftBenchmark_12182019/GRCh37/HG002_GRCh37_1_22_v4.1_draft_benchmark.vcf.gz.tbi
+#wget ftp://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/analysis/NIST_v4.1_SmallVariantDraftBenchmark_12182019/GRCh37/HG002_GRCh37_1_22_v4.1_draft_benchmark.bed
+
+wget https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/analysis/NIST_v4.1_SmallVariantDraftBenchmark_12182019/GRCh38/HG002_GRCh38_1_22_v4.1_draft_benchmark.vcf.gz
+gunzip HG002_GRCh38_1_22_v4.1_draft_benchmark.vcf.gz
+head -500 HG002_GRCh38_1_22_v4.1_draft_benchmark.vcf > HG002_GRCh38_1_22_v4.1_draft_benchmark.head1k.vcf
+
+gunzip HG002_GRCh37_1_22_v4.1_draft_benchmark.vcf.gz
+wget https://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/AshkenazimTrio/HG003_NA24149_father/NIST_Illumina_2x250bps/HG003_250bp_All_good-29988042/HG003-250bp-All-good_S1.vcf
+head -500 HG002_GRCh37_1_22_v4.1_draft_benchmark.vcf > HG002_GRCh37_1_22_v4.1_draft_benchmark.head1k.vcf
+head -500 HG003-250bp-All-good_S1.vcf > HG003-250bp-All-good_S1.head1k.vcf
+
+cp /groups/umcg-atd/tmp07/concordance/tmp/d4/afb18f62025aab57bc16c68a5ea92a/OA002.converted.vcf ./
+cp /groups/umcg-atd/tmp07/concordance/tmp/fb/df7536b6e12393a87c7f8969b33735/OA002.GRCh38.vcf ./
+
+# remove problematic snps
+sed -i '/rs1633021/d' OA002.GRCh38.vcf
+sed -i '/rs2844682/d' OA002.GRCh38.vcf
+
+#grep header
+grep '#' HG002_GRCh37_1_22_v4.1_draft_benchmark.vcf > HG002_GRCh37_1_22_v4.1_draft_benchmark.head1k.vcf
+grep '#' HG002_GRCh38_1_22_v4.1_draft_benchmark.vcf > HG002_GRCh38_1_22_v4.1_draft_benchmark.head1k.vcf
+
+#grep oa snps
+for i in $(grep -v '#' OA002.converted.vcf | awk '{print $3}'); do grep -w "${i}" HG002_GRCh37_1_22_v4.1_draft_benchmark.vcf ; done >> HG002_GRCh37_1_22_v4.1_draft_benchmark.head1k.vcf
+for i in $(grep -v '#' OA002.GRCh38.vcf | awk '{print $2}'); do grep -w "${i}"    HG002_GRCh38_1_22_v4.1_draft_benchmark.vcf ; done >> HG002_GRCh38_1_22_v4.1_draft_benchmark.head1k.vcf
+
+ml HTSlib/1.16-GCCcore-11.3.0
+ml BCFtools
+for i in {1..6}
+do
+	echo "DNA-00${i}.GRCh37" > file.txt
+	bcftools reheader -s file.txt -o HG002_GRCh37_1_22_v4.1_draft_benchmark.head1k.reader.vcf HG002_GRCh37_1_22_v4.1_draft_benchmark.head1k.vcf
+	bcftools sort HG002_GRCh37_1_22_v4.1_draft_benchmark.head1k.reader.vcf -o HG002_GRCh37_1_22_v4.1_draft_benchmark.head1k.reader.vcf 
+	bgzip -c HG002_GRCh37_1_22_v4.1_draft_benchmark.head1k.reader.vcf > "DNA-00${i}.GRCh37.FINAL.vcf.gz"
+	tabix -p vcf "DNA-00${i}.GRCh37.FINAL.vcf.gz"
+	
+	echo "DNA-00${i}.GRCh38" > file.txt
+	bcftools reheader -s file.txt -o HG002_GRCh38_1_22_v4.1_draft_benchmark.head1k.reader.vcf HG002_GRCh38_1_22_v4.1_draft_benchmark.head1k.vcf
+	bcftools sort HG002_GRCh38_1_22_v4.1_draft_benchmark.head1k.reader.vcf -o HG002_GRCh38_1_22_v4.1_draft_benchmark.head1k.reader.vcf
+	bgzip -c HG002_GRCh38_1_22_v4.1_draft_benchmark.head1k.reader.vcf > "DNA-00${i}.GRCh38.FINAL.vcf.gz"
+	tabix -p vcf "DNA-00${i}.GRCh38.FINAL.vcf.gz"
+done
+
+for i in {7..9}
+do
+        echo "RNA-00${i}.GRCh37" > file.txt
+        bcftools reheader -s file.txt -o HG002_GRCh37_1_22_v4.1_draft_benchmark.head1k.reader.vcf HG002_GRCh37_1_22_v4.1_draft_benchmark.head1k.vcf
+        bgzip -c HG002_GRCh37_1_22_v4.1_draft_benchmark.head1k.reader.vcf > "RNA-00${i}.GRCh37.FINAL.vcf.gz"
+        tabix -p vcf "RNA-00${i}.GRCh37.FINAL.vcf.gz"
+        
+        echo "RNA-00${i}.GRCh38" > file.txt
+        bcftools reheader -s file.txt -o HG002_GRCh38_1_22_v4.1_draft_benchmark.head1k.reader.vcf HG002_GRCh38_1_22_v4.1_draft_benchmark.head1k.vcf
+        bcftools sort HG002_GRCh38_1_22_v4.1_draft_benchmark.head1k.reader.vcf -o HG002_GRCh38_1_22_v4.1_draft_benchmark.head1k.reader.vcf
+	bgzip -c HG002_GRCh38_1_22_v4.1_draft_benchmark.head1k.reader.vcf > "RNA-00${i}.GRCh38.FINAL.vcf.gz"
+        tabix -p vcf "RNA-00${i}.GRCh38.FINAL.vcf.gz"
+done
+
+	# NA12878.GRCh38 and NA12878.GRCh37
+	echo "NA12878.GRCh38" > file.txt
+	bcftools reheader -s file.txt -o NA12878.GRCh38.vcf 105856-047-HG001.hard-filtered.vcf.gz
+	bcftools sort NA12878.GRCh38.vcf -o NA12878.GRCh38.sorted.vcf
+	bgzip -c NA12878.GRCh38.sorted.vcf > "NA12878.GRCh38.sorted.vcf.gz"
+	bedtools intersect -a NA12878.GRCh38.sorted.vcf.gz -b /apps/data/UMCG/concordanceCheckSnps_GRCh38.bed > NA12878.GRCh38.sorted.intersect.txt
+	grep '#' NA12878.GRCh38.sorted.vcf > NA12878.GRCh38.sorted.header
+	cat NA12878.GRCh38.sorted.header NA12878.GRCh38.sorted.intersect.txt > NA12878.GRCh38.sorted.vcf
+	bgzip -c NA12878.GRCh38.sorted.vcf > "NA12878.GRCh38.sorted.vcf.gz"
+	tabix -p vcf "NA12878.GRCh38.sorted.vcf.gz"
+

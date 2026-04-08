@@ -1,0 +1,2 @@
+data1Id	data2Id	location1	location2	fileType1	fileType2	build1	build2	project1	project2	fileprefix	processStepId
+NA12878.GRCh37	DNA-005.GRCh37	/groups/umcg-atd/tmp08/tmp/ConcordanceCheck/betaAutotest/nextflow/test/bams/NA12878.GRCh37.bam	/groups/umcg-atd/tmp08/tmp/ConcordanceCheck/betaAutotest/nextflow/test/vcfs/DNA-005.GRCh37.FINAL.vcf.gz	BAM	VCF	GRCh37	GRCh37	test_123-DNA_v1	OPAR_123	100028_test_123-DNA_v1_NA12878.GRCh37_NGS_DNA_123_DNA-005.GRCh37	100028

@@ -182,7 +182,7 @@ The cleanup script runs once a day, it will clean up old data:
                  |   |-- ${ngsVcf}
                  |-- results
                  |   |-- ${ConcordanceCheckID}.sample
-                 |   |-- ${ConcordanceCheckID}.varinat
+                 |   |-- ${ConcordanceCheckID}.variants
                  |-- heranalyse
                  |-- verificaties
                  |-- tmp

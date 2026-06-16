@@ -10,7 +10,7 @@ parallel(
     				stage ('Automated test') {
         
         				echo "Copy test from repo to molgenis home on Talos"
-        				sh "sudo scp test/autotest.sh reception+talos:/home/umcg-molgenis/"
+        				sh "sudo scp nextflow/test/autotest.sh reception+talos:/home/umcg-molgenis/"
         
         				echo "Login to Talos"
 	    
@@ -41,7 +41,7 @@ ENDSSH'
     				stage ('Automated test') {
         
         				echo "Copy test from repo to molgenis home on Hyperchicken"
-        				sh "sudo scp test/autotest.sh portal+hyperchicken:/home/umcg-molgenis/"
+        				sh "sudo scp nextflow/test/autotest.sh portal+hyperchicken:/home/umcg-molgenis/"
         
         				echo "Login to Hyperchicken"
 	    

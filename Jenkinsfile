@@ -68,4 +68,4 @@ if (finished_first) {
     echo "First server to succeed: ${finished_first}"
 } else {
     error("Both servers failed")
-}auto
+}

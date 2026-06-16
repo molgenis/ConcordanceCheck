@@ -58,7 +58,17 @@ fi
 #
 
 pipeline='ConcordanceCheck'
-TMPDIR='tmp08'
+host=$(hostname -s)
+
+if [[ "${host}" == "talos" ]]
+then
+	TMPDIR="tmp08"
+elif [[ "${host}" == "hyperchicken" ]]
+then
+	TMPDIR="tmp09"
+else
+	echo "No valid host to run Jenkins."
+fi
 
 TMPDIRECTORY="/groups/umcg-atd/${TMPDIR}"
 WORKDIR="${TMPDIRECTORY}/tmp/${pipeline}/betaAutotest"
